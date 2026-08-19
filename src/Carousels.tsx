@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { ChartOverlay, Dots, Reveal, Sheet, useSnap, useToast } from "./ui";
 import {
-  BANKS, CURRENCIES, NEWS, loadConnectedBankIds,
+  BANKS, CURRENCIES, NEWS, NEWS_SECTION_META, loadConnectedBankIds,
   type BankInfo, type CurrencyItem, type NewsItem,
 } from "./data";
 import {
@@ -446,9 +446,9 @@ function CurrencyDetailSheet({
   );
 }
 
-/* ---------- Новостная лента ---------- */
-const NEWS_ICON: Record<NewsItem["category"], string> = { mandatory: "alert", personal: "user", edu: "cap" };
-const NEWS_LABEL: Record<NewsItem["category"], string> = { mandatory: "Обязательно", personal: "Персонально", edu: "Обучение" };
+/* ---------- Новостная лента: на главном экране — только самые релевантные
+   новости, полный список по всем направлениям — на экране «Все новости» ---------- */
+const HOME_NEWS = [...NEWS].sort((a, b) => b.relevance - a.relevance).slice(0, 6);
 
 export function NewsCarousel({
   onRead, onAllNews,
@@ -456,7 +456,7 @@ export function NewsCarousel({
   onRead: (n: NewsItem) => void;
   onAllNews: () => void;
 }) {
-  const { ref, index, onScroll, goTo } = useSnap(NEWS.length);
+  const { ref, index, onScroll, goTo } = useSnap(HOME_NEWS.length);
   return (
     <Reveal>
       <section>
@@ -465,7 +465,7 @@ export function NewsCarousel({
           <button onClick={onAllNews} className="press text-[12.5px] font-bold text-accent">Все новости</button>
         </div>
         <div ref={ref} onScroll={onScroll} data-hscroll className="no-scrollbar mt-3 flex snap-x snap-mandatory overflow-x-auto pl-4">
-          {NEWS.map((n) => (
+          {HOME_NEWS.map((n) => (
             <div key={n.id} className="w-[272px] shrink-0 snap-start pr-3">
               <article
                 className={`flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-card transition-shadow hover:shadow-float ${
@@ -483,8 +483,8 @@ export function NewsCarousel({
                   />
                   <div className="relative flex items-center justify-between p-3">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2 py-1 text-[10px] font-extrabold text-ink-solid backdrop-blur-sm">
-                      <Icon name={NEWS_ICON[n.category] as never} className="h-3 w-3" strokeWidth={2.2} />
-                      {NEWS_LABEL[n.category]}
+                      <Icon name={NEWS_SECTION_META[n.section].icon} className="h-3 w-3" strokeWidth={2.2} />
+                      {NEWS_SECTION_META[n.section].label}
                     </span>
                     {n.important && (
                       <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-danger" title="Важная новость">
@@ -511,7 +511,7 @@ export function NewsCarousel({
             </div>
           ))}
         </div>
-        <Dots count={NEWS.length} active={index} onPick={goTo} />
+        <Dots count={HOME_NEWS.length} active={index} onPick={goTo} />
       </section>
     </Reveal>
   );
