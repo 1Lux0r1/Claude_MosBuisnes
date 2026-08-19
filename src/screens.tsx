@@ -30,7 +30,7 @@ export function ServicesScreen({
             key={c}
             onClick={() => onCategory(c)}
             className={`press shrink-0 rounded-full px-3.5 py-2 text-[12px] font-extrabold transition-all duration-300 ${
-              category === c ? "bg-ink text-white" : "bg-white text-sub shadow-card"
+              category === c ? "bg-ink text-on-ink" : "bg-card text-sub shadow-card"
             }`}
           >
             {c}
@@ -41,7 +41,7 @@ export function ServicesScreen({
       <div className="mt-4 space-y-2.5">
         {list.map((s, i) => (
           <Reveal key={s.id} delay={i * 50}>
-            <div className="group rounded-2xl border border-line/80 bg-white p-3.5 shadow-card transition-all hover:border-accent/40 hover:shadow-float">
+            <div className="group rounded-2xl border border-line/80 bg-card p-3.5 shadow-card transition-all hover:border-accent/40 hover:shadow-float">
               <div className="flex items-center gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-paper text-ink2">
                   <Icon name={s.icon as IconName} className="h-5 w-5" />
@@ -120,7 +120,7 @@ export function EventsScreen({
             key={f.id}
             onClick={() => setFilter(f.id)}
             className={`press rounded-full px-3 py-2 text-[11.5px] font-extrabold transition-all duration-300 ${
-              filter === f.id ? "bg-ink text-white" : "bg-white text-sub shadow-card"
+              filter === f.id ? "bg-ink text-on-ink" : "bg-card text-sub shadow-card"
             }`}
           >
             {f.label}
@@ -129,7 +129,7 @@ export function EventsScreen({
       </div>
 
       {list.length === 0 ? (
-        <div className="mt-4 rounded-2xl border border-line/80 bg-white shadow-card">
+        <div className="mt-4 rounded-2xl border border-line/80 bg-card shadow-card">
           <EmptyState title="Событий с таким типом нет" hint="Выберите другой фильтр или посмотрите все события недели." />
           <div className="flex justify-center pb-4">
             <button onClick={() => setFilter("all")} className="press rounded-full bg-accent px-5 py-2 text-[12px] font-extrabold text-white">
@@ -143,7 +143,7 @@ export function EventsScreen({
             const done = registered.has(x.id);
             return (
               <Reveal key={x.id} delay={i * 45}>
-                <div className="flex items-center gap-3 rounded-2xl border border-line/80 bg-white p-3.5 shadow-card transition-all hover:shadow-float">
+                <div className="flex items-center gap-3 rounded-2xl border border-line/80 bg-card p-3.5 shadow-card transition-all hover:shadow-float">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: `${KIND_DOT[x.ev.kind]}1a` }}>
                     <Icon
                       name={x.ev.kind === "info" ? "calendar" : x.ev.kind === "deadline" ? "clock" : "alert"}
@@ -164,7 +164,7 @@ export function EventsScreen({
                       toast(done ? "Запись отменена" : `Вы записаны: «${x.ev.title}»`, done ? "close" : "check");
                     }}
                     className={`press shrink-0 rounded-full px-3 py-2 text-[11px] font-extrabold transition-colors duration-300 ${
-                      done ? "bg-ok-soft text-ok" : "bg-ink text-white hover:bg-accent"
+                      done ? "bg-ok-soft text-ok" : "bg-ink text-on-ink hover:bg-accent hover:text-white"
                     }`}
                   >
                     {done ? "Вы записаны" : "Записаться"}

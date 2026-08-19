@@ -59,14 +59,14 @@ export function QuickActions({
                 <Reveal key={a.id} delay={(ri * 3 + i) * 45}>
                   <button
                     onClick={() => onPick(a)}
-                    className="press relative flex h-full w-full flex-col items-start rounded-2xl border border-line/80 bg-white p-3 text-left shadow-card transition-shadow hover:shadow-float"
+                    className="press relative flex h-full w-full flex-col items-start rounded-2xl border border-line/80 bg-card p-3 text-left shadow-card transition-shadow hover:shadow-float"
                   >
                     {a.badge && (
-                      <span className="absolute -right-1.5 -top-1.5 grid h-[19px] min-w-[19px] place-items-center rounded-full border-2 border-white bg-danger px-1 text-[10px] font-extrabold leading-none text-white">
+                      <span className="absolute -right-1.5 -top-1.5 grid h-[19px] min-w-[19px] place-items-center rounded-full border-2 border-card bg-danger px-1 text-[10px] font-extrabold leading-none text-white">
                         {a.badge}
                       </span>
                     )}
-                    <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2" style={{ background: a.tint }}>
+                    <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2-solid" style={{ background: a.tint }}>
                       <Icon name={a.icon as IconName} className="h-[19px] w-[19px]" />
                     </span>
                     <span className="mt-2 text-[12px] font-extrabold leading-[1.2] tracking-tight">{a.title}</span>
@@ -107,7 +107,7 @@ export function QuickActionsPicker({
               key={a.id}
               onClick={() => onToggle(a.id)}
               className={`press relative flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-all duration-200 ${
-                isOn ? "border-accent bg-accent-soft" : "border-line/80 bg-white"
+                isOn ? "border-accent bg-accent-soft" : "border-line/80 bg-card"
               } ${locked && !isOn ? "opacity-40" : ""}`}
             >
               {isOn && (
@@ -115,7 +115,7 @@ export function QuickActionsPicker({
                   <Icon name="check" className="h-3 w-3" strokeWidth={3} />
                 </span>
               )}
-              <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2" style={{ background: a.tint }}>
+              <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2-solid" style={{ background: a.tint }}>
                 <Icon name={a.icon as IconName} className="h-[18px] w-[18px]" />
               </span>
               <span className="text-[11px] font-bold leading-tight">{a.title}</span>
@@ -125,7 +125,7 @@ export function QuickActionsPicker({
       </div>
       <button
         onClick={onClose}
-        className="press mt-4 w-full rounded-full bg-ink py-3 text-[13px] font-extrabold text-white"
+        className="press mt-4 w-full rounded-full bg-ink py-3 text-[13px] font-extrabold text-on-ink"
       >
         Готово
       </button>
@@ -146,9 +146,9 @@ export function ServiceSections({ onPick }: { onPick: (s: ServiceSection) => voi
             <Reveal key={s.id} delay={i * 60}>
               <button
                 onClick={() => onPick(s)}
-                className="press group flex w-full items-center gap-3.5 rounded-2xl border border-line/80 bg-white p-3.5 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
+                className="press group flex w-full items-center gap-3.5 rounded-2xl border border-line/80 bg-card p-3.5 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
               >
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-ink2 transition-transform duration-300 group-hover:scale-105" style={{ background: s.tint }}>
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-ink2-solid transition-transform duration-300 group-hover:scale-105" style={{ background: s.tint }}>
                   <Icon name={s.icon as IconName} className="h-6 w-6" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -228,7 +228,7 @@ export function PartnersBlock({
                       <span className="block line-clamp-1 text-[13px] font-extrabold tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
                         {p.name}
                       </span>
-                      <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-lg bg-white/92 px-2 py-1 text-[10px] font-extrabold text-ink backdrop-blur-sm">
+                      <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-lg bg-white/92 px-2 py-1 text-[10px] font-extrabold text-ink-solid backdrop-blur-sm">
                         <Icon name="spark" className="h-3 w-3 shrink-0 text-accent" strokeWidth={2.2} />
                         <span className="truncate">{p.badge}</span>
                       </span>

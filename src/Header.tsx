@@ -103,7 +103,7 @@ export default function Header({
   ];
 
   return (
-    <header className="relative z-40 border-b border-line/70 bg-white/90 backdrop-blur-md">
+    <header className="relative z-40 border-b border-line/70 bg-card/90 backdrop-blur-md">
       <StatusBar offline={offline} />
       <div className="flex items-center gap-2.5 px-4 pb-3 pt-1">
         {tab > 0 ? (
@@ -115,7 +115,7 @@ export default function Header({
             <Icon name="chevron-left" className="h-5 w-5" strokeWidth={2.1} />
           </button>
         ) : (
-          <span className="font-display grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-[13px] font-extrabold text-white">
+          <span className="font-display grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-solid text-[13px] font-extrabold text-white">
             МБ
           </span>
         )}
@@ -163,12 +163,12 @@ export default function Header({
             aria-expanded={menuOpen}
           >
             АП
-            <span className={`absolute right-0 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-danger transition-opacity duration-300 ${menuOpen ? "opacity-0" : "opacity-100"}`} />
+            <span className={`absolute right-0 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-danger transition-opacity duration-300 ${menuOpen ? "opacity-0" : "opacity-100"}`} />
           </button>
 
           {menuOpen && (
             <div
-              className="animate-pop absolute right-0 top-[46px] z-50 w-48 origin-top-right overflow-hidden rounded-2xl border border-line/80 bg-white/95 shadow-float backdrop-blur-md"
+              className="animate-pop absolute right-0 top-[46px] z-50 w-48 origin-top-right overflow-hidden rounded-2xl border border-line/80 bg-card/95 shadow-float backdrop-blur-md"
               role="menu"
             >
               <div className="border-b border-line/60 px-4 py-2.5">
@@ -200,7 +200,7 @@ export default function Header({
       </div>
 
       {showOverlay && (
-        <div className="animate-fade-in absolute inset-x-3 top-full z-40 overflow-hidden rounded-2xl border border-line/80 bg-white shadow-float">
+        <div className="animate-fade-in absolute inset-x-3 top-full z-40 overflow-hidden rounded-2xl border border-line/80 bg-card shadow-float">
           {hits.length === 0 ? (
             <div className="px-4 py-5 text-center">
               <p className="text-[13px] font-extrabold">Ничего не нашлось</p>

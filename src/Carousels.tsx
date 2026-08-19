@@ -97,7 +97,7 @@ export function CurrencyCarousel() {
             <div key={c.code} className="w-[calc(100%-32px)] shrink-0 snap-start">
               <button
                 onClick={() => setDetail(c)}
-                className="press w-full rounded-2xl border border-line/80 bg-white p-4 text-left shadow-card transition-shadow hover:shadow-float"
+                className="press w-full rounded-2xl border border-line/80 bg-card p-4 text-left shadow-card transition-shadow hover:shadow-float"
               >
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2.5">
@@ -204,7 +204,7 @@ function CurrencyDetailSheet({
             const connected = connectedBankIds.includes(bank.id);
             const holding = connected ? bank.fx?.find((f) => f.code === c.code)?.amount : undefined;
             return (
-              <div key={bank.id} className="rounded-2xl border border-line/80 bg-white p-3.5 shadow-card">
+              <div key={bank.id} className="rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
                 <div className="flex items-center gap-2.5">
                   <span
                     className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[12px] font-extrabold"
@@ -236,7 +236,7 @@ function CurrencyDetailSheet({
                   </button>
                   <button
                     onClick={() => trade(bank, "sell", o.buy)}
-                    className="press flex-1 rounded-full bg-ink py-2 text-[12px] font-extrabold text-white"
+                    className="press flex-1 rounded-full bg-ink py-2 text-[12px] font-extrabold text-on-ink"
                   >
                     Продать
                   </button>
@@ -293,7 +293,7 @@ export function NewsCarousel({
           {NEWS.map((n) => (
             <div key={n.id} className="w-[272px] shrink-0 snap-start pr-3">
               <article
-                className={`flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-card transition-shadow hover:shadow-float ${
+                className={`flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-card transition-shadow hover:shadow-float ${
                   n.important ? "border-danger/35" : "border-line/80"
                 }`}
               >
@@ -307,7 +307,7 @@ export function NewsCarousel({
                     strokeWidth={1.4}
                   />
                   <div className="relative flex items-center justify-between p-3">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2 py-1 text-[10px] font-extrabold text-ink backdrop-blur-sm">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2 py-1 text-[10px] font-extrabold text-ink-solid backdrop-blur-sm">
                       <Icon name={NEWS_ICON[n.category] as never} className="h-3 w-3" strokeWidth={2.2} />
                       {NEWS_LABEL[n.category]}
                     </span>

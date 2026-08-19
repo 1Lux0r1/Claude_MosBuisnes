@@ -119,7 +119,10 @@ export default function App() {
         backgroundSize: "auto, auto, 22px 22px",
       }}
     >
-      <div className="mx-auto flex h-full w-full max-w-[400px] flex-col bg-white shadow-[0_0_90px_-24px_rgba(14,18,32,0.35)] md:my-5 md:h-[calc(100%-40px)] md:max-w-[392px] md:rounded-[46px] md:border-[9px] md:border-ink">
+      <div
+        id="app-shell"
+        className="mx-auto flex h-full w-full max-w-[400px] flex-col bg-card text-ink shadow-[0_0_90px_-24px_rgba(14,18,32,0.35)] md:my-5 md:h-[calc(100%-40px)] md:max-w-[392px] md:rounded-[46px] md:border-[9px] md:border-ink-solid"
+      >
         <ToastProvider>
           <Shell
             tab={tab}
@@ -212,7 +215,7 @@ function Shell(props: {
   };
 
   return (
-    <div id="app-shell" className="relative flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <Header
         tab={tab}
         onBack={onBack}
@@ -345,7 +348,7 @@ function ActionSheetView({
             <button
               key={n.id}
               onClick={() => onNavigate({ kind: "news", data: n })}
-              className="press flex w-full items-start gap-3 rounded-2xl border border-line/70 bg-white p-3 text-left"
+              className="press flex w-full items-start gap-3 rounded-2xl border border-line/70 bg-card p-3 text-left"
             >
               <span
                 className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full ${
@@ -381,7 +384,7 @@ function ActionSheetView({
           />
           <span
             className={`relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-extrabold backdrop-blur-sm ${
-              n.important ? "bg-white text-danger" : "bg-white/90 text-ink"
+              n.important ? "bg-white text-danger" : "bg-white/90 text-ink-solid"
             }`}
           >
             {n.important && <Icon name="excl" className="h-3 w-3" strokeWidth={2.4} />}
@@ -397,7 +400,7 @@ function ActionSheetView({
               toast("Новость сохранена в закладки", "star");
               onClose();
             }}
-            className="press flex-1 rounded-full bg-ink py-2.5 text-[12.5px] font-extrabold text-white"
+            className="press flex-1 rounded-full bg-ink py-2.5 text-[12.5px] font-extrabold text-on-ink"
           >
             В закладки
           </button>
@@ -488,7 +491,7 @@ function ActionSheetView({
       <ol className="mt-3 space-y-2.5">
         {a.steps.map((s, i) => (
           <li key={i} className="flex items-center gap-3 rounded-xl bg-paper px-3 py-2.5">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-[12px] font-extrabold text-accent-deep shadow-card">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-card text-[12px] font-extrabold text-accent-deep shadow-card">
               {i + 1}
             </span>
             <span className="text-[13px] font-bold">{s}</span>

@@ -329,7 +329,7 @@ export default function ProfileService() {
                     <button
                       onClick={() => connectBank(b)}
                       disabled={isOn}
-                      className={`press group flex w-full items-center gap-3.5 rounded-2xl border bg-white p-3.5 text-left shadow-card transition-all ${
+                      className={`press group flex w-full items-center gap-3.5 rounded-2xl border bg-card p-3.5 text-left shadow-card transition-all ${
                         isOn ? "border-ok/30 opacity-75" : "border-line/80 hover:border-accent/40 hover:shadow-float"
                       }`}
                     >
@@ -379,7 +379,7 @@ export default function ProfileService() {
     return (
       <SubView title="Права доступа" onBack={() => { setView({ t: "root" }); setConfirmDelete(false); }}>
         <Reveal>
-          <div className="flex items-center gap-3.5 rounded-2xl border border-line/80 bg-white p-4 shadow-card">
+          <div className="flex items-center gap-3.5 rounded-2xl border border-line/80 bg-card p-4 shadow-card">
             <span className="font-display grid h-13 w-13 shrink-0 place-items-center rounded-2xl p-3 text-[15px] font-semibold text-white" style={{ background: color }}>
               {initials(emp.name)}
             </span>
@@ -406,7 +406,7 @@ export default function ProfileService() {
               const on = emp.perms.includes(p.key);
               return (
                 <Reveal key={p.key} delay={60 + i * 55}>
-                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-line/80 bg-white p-3.5 shadow-card">
+                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
                     <div className="flex min-w-0 items-center gap-3">
                       <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${on ? "bg-accent-soft text-accent-deep" : "bg-paper text-faint"}`}>
                         <Icon name={p.icon} className="h-5 w-5" />
@@ -431,7 +431,7 @@ export default function ProfileService() {
               className={`press mt-3.5 flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[12.5px] font-extrabold transition-all duration-300 ${
                 confirmDelete
                   ? "border-danger bg-danger text-white"
-                  : "border-line/80 bg-white text-danger shadow-card hover:bg-danger-soft"
+                  : "border-line/80 bg-card text-danger shadow-card hover:bg-danger-soft"
               }`}
             >
               <Icon name="close" className="h-4 w-4" strokeWidth={2.2} />
@@ -453,7 +453,7 @@ export default function ProfileService() {
     <div className="space-y-4 px-4 pt-4 pb-8">
       {/* Организация */}
       <Reveal>
-        <div className="relative overflow-hidden rounded-2xl bg-ink p-4 text-white shadow-float">
+        <div className="relative overflow-hidden rounded-2xl bg-ink-solid p-4 text-white shadow-float">
           <span
             className="pointer-events-none absolute inset-0"
             style={{ background: "radial-gradient(320px 180px at 90% -20%, rgba(10,107,255,0.5), transparent 65%)" }}
@@ -495,7 +495,7 @@ export default function ProfileService() {
           {connectedBanks.length === 0 ? (
             <button
               onClick={() => setView({ t: "bankAdd" })}
-              className="press group mt-2.5 w-full rounded-2xl border-2 border-dashed border-line bg-white/60 p-4 text-left transition-all hover:border-accent/60 hover:bg-accent-soft/40"
+              className="press group mt-2.5 w-full rounded-2xl border-2 border-dashed border-line bg-card/60 p-4 text-left transition-all hover:border-accent/60 hover:bg-accent-soft/40"
             >
               <div className="flex items-center gap-3.5">
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-paper text-ink2 transition-colors group-hover:bg-accent group-hover:text-white">
@@ -513,7 +513,7 @@ export default function ProfileService() {
               </div>
             </button>
           ) : (
-            <div className="mt-2.5 overflow-hidden rounded-2xl border border-line/80 bg-white shadow-card">
+            <div className="mt-2.5 overflow-hidden rounded-2xl border border-line/80 bg-card shadow-card">
               {/* Итог по всем счетам */}
               <div className="p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -563,7 +563,7 @@ export default function ProfileService() {
                       </p>
                       <button
                         onClick={() => disconnectBank(b)}
-                        className="press grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-faint transition-colors hover:bg-danger-soft hover:text-danger"
+                        className="press grid h-7 w-7 shrink-0 place-items-center rounded-full bg-card text-faint transition-colors hover:bg-danger-soft hover:text-danger"
                         aria-label={`Отключить ${b.name}`}
                       >
                         <Icon name="close" className="h-3.5 w-3.5" strokeWidth={2.2} />
@@ -602,7 +602,7 @@ export default function ProfileService() {
           <SectionTitle icon="doc" title="Заявления" />
           <button
             onClick={() => setView({ t: "apps" })}
-            className="press group mt-2.5 w-full rounded-2xl border border-line/80 bg-white p-4 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
+            className="press group mt-2.5 w-full rounded-2xl border border-line/80 bg-card p-4 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
           >
             <div className="flex items-center gap-4">
               <div>
@@ -648,7 +648,7 @@ export default function ProfileService() {
               return (
                 <Reveal key={s.id} delay={i * 60}>
                   <div
-                    className={`rounded-2xl border bg-white p-3.5 shadow-card transition-all duration-300 ${
+                    className={`rounded-2xl border bg-card p-3.5 shadow-card transition-all duration-300 ${
                       isOn ? "border-ok/30" : "border-line/80 hover:border-accent/40 hover:shadow-float"
                     }`}
                   >
@@ -747,7 +747,7 @@ export default function ProfileService() {
               <button
                 key={e.id}
                 onClick={() => { setView({ t: "emp", id: e.id }); setConfirmDelete(false); }}
-                className="press group flex w-full items-center gap-3 rounded-2xl border border-line/80 bg-white p-3 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
+                className="press group flex w-full items-center gap-3 rounded-2xl border border-line/80 bg-card p-3 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
               >
                 <span className="font-display grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[12px] font-semibold text-white" style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
                   {initials(e.name)}
@@ -771,7 +771,7 @@ export default function ProfileService() {
                 value={invite.name}
                 onChange={(ev) => { setInvite({ ...invite, name: ev.target.value }); if (inviteErr.name) setInviteErr({ ...inviteErr, name: undefined }); }}
                 placeholder="Имя и фамилия"
-                className={`mt-2 h-10 w-full rounded-xl border bg-white px-3 text-[13px] font-semibold outline-none placeholder:font-medium placeholder:text-faint ${inviteErr.name ? "border-danger ring-2 ring-danger/20" : "border-line focus:border-accent"}`}
+                className={`mt-2 h-10 w-full rounded-xl border bg-card px-3 text-[13px] font-semibold outline-none placeholder:font-medium placeholder:text-faint ${inviteErr.name ? "border-danger ring-2 ring-danger/20" : "border-line focus:border-accent"}`}
               />
               {inviteErr.name && <p className="mt-1 text-[11px] font-bold text-danger">{inviteErr.name}</p>}
               <input
@@ -779,7 +779,7 @@ export default function ProfileService() {
                 onChange={(ev) => { setInvite({ ...invite, email: ev.target.value }); if (inviteErr.email) setInviteErr({ ...inviteErr, email: undefined }); }}
                 placeholder="E-mail"
                 inputMode="email"
-                className={`mt-2 h-10 w-full rounded-xl border bg-white px-3 text-[13px] font-semibold outline-none placeholder:font-medium placeholder:text-faint ${inviteErr.email ? "border-danger ring-2 ring-danger/20" : "border-line focus:border-accent"}`}
+                className={`mt-2 h-10 w-full rounded-xl border bg-card px-3 text-[13px] font-semibold outline-none placeholder:font-medium placeholder:text-faint ${inviteErr.email ? "border-danger ring-2 ring-danger/20" : "border-line focus:border-accent"}`}
               />
               {inviteErr.email && <p className="mt-1 text-[11px] font-bold text-danger">{inviteErr.email}</p>}
               <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -795,7 +795,7 @@ export default function ProfileService() {
                 ))}
               </div>
               <div className="mt-3 flex justify-end gap-2">
-                <button onClick={() => { setInviteOpen(false); setInviteErr({}); }} className="press rounded-full bg-white px-4 py-2 text-[12px] font-extrabold text-sub">
+                <button onClick={() => { setInviteOpen(false); setInviteErr({}); }} className="press rounded-full bg-card px-4 py-2 text-[12px] font-extrabold text-sub">
                   Отмена
                 </button>
                 <button onClick={submitInvite} className="press inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-[12px] font-extrabold text-white">
@@ -807,7 +807,7 @@ export default function ProfileService() {
           ) : (
             <button
               onClick={() => setInviteOpen(true)}
-              className="press mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-line bg-white/60 py-2.5 text-[12px] font-extrabold text-accent transition-colors hover:border-accent/50 hover:bg-accent-soft/40"
+              className="press mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-line bg-card/60 py-2.5 text-[12px] font-extrabold text-accent transition-colors hover:border-accent/50 hover:bg-accent-soft/40"
             >
               <Icon name="plus" className="h-3.5 w-3.5" strokeWidth={2.4} />
               Пригласить сотрудника
@@ -863,11 +863,11 @@ function ApplicationsView({ onBack }: { onBack: () => void }) {
             key={f.id}
             onClick={() => setFilter(f.id)}
             className={`press flex items-center justify-center gap-1.5 rounded-full py-2 text-[12px] font-extrabold transition-all duration-300 ${
-              filter === f.id ? "bg-ink text-white shadow-card" : "bg-white text-sub shadow-card"
+              filter === f.id ? "bg-ink text-on-ink shadow-card" : "bg-card text-sub shadow-card"
             }`}
           >
             {f.label}
-            <span className={`rounded-full px-1.5 py-px text-[10px] ${filter === f.id ? "bg-white/20" : "bg-paper"}`}>{f.n}</span>
+            <span className={`rounded-full px-1.5 py-px text-[10px] ${filter === f.id ? "bg-on-ink/20" : "bg-paper"}`}>{f.n}</span>
           </button>
         ))}
       </div>
@@ -878,7 +878,7 @@ function ApplicationsView({ onBack }: { onBack: () => void }) {
           const isActive = isActiveStatus(a.status);
           return (
             <Reveal key={a.id} delay={i * 50}>
-              <div className="rounded-2xl border border-line/80 bg-white p-3.5 shadow-card">
+              <div className="rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
                 <div className="flex items-start gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: m.bg, color: m.fg }}>
                     <Icon name={m.icon} className="h-5 w-5" strokeWidth={2} />

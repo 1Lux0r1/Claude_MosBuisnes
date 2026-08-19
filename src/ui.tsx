@@ -24,7 +24,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="pointer-events-none absolute inset-x-0 bottom-28 z-[80] flex flex-col items-center gap-2 px-6">
         {toasts.map((t) => (
-          <div key={t.id} className="animate-toast-in flex items-center gap-2.5 rounded-full bg-ink px-4 py-2.5 shadow-float">
+          <div key={t.id} className="animate-toast-in flex items-center gap-2.5 rounded-full bg-ink-solid px-4 py-2.5 shadow-float">
             {t.icon && (
               <span className="grid h-5 w-5 place-items-center rounded-full bg-white/15 text-white">
                 <Icon name={t.icon as never} className="h-3 w-3" strokeWidth={2.4} />
@@ -85,8 +85,8 @@ export function Sheet({
   if (!open) return null;
   return createPortal(
     <div className="absolute inset-0 z-[70]">
-      <button aria-label="Закрыть" className="animate-fade-in absolute inset-0 h-full w-full bg-ink/45" onClick={onClose} />
-      <div className="animate-sheet-up absolute inset-x-0 bottom-0 max-h-[86%] overflow-hidden rounded-t-[26px] bg-white shadow-float">
+      <button aria-label="Закрыть" className="animate-fade-in absolute inset-0 h-full w-full bg-ink-solid/45" onClick={onClose} />
+      <div className="animate-sheet-up absolute inset-x-0 bottom-0 max-h-[86%] overflow-hidden rounded-t-[26px] bg-card shadow-float">
         <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line" />
         <div className="flex items-center justify-between px-5 pt-3 pb-1">
           <h3 className="font-display text-[15px] font-semibold tracking-tight">{title}</h3>
@@ -118,8 +118,8 @@ export function ChartOverlay({
   if (!open) return null;
   return createPortal(
     <div className="absolute inset-0 z-[75]">
-      <button aria-label="Закрыть" className="animate-fade-in absolute inset-0 h-full w-full bg-ink/40" onClick={onClose} />
-      <div className="animate-pop absolute inset-x-3 top-16 bottom-16 flex flex-col overflow-hidden rounded-3xl bg-white shadow-float">
+      <button aria-label="Закрыть" className="animate-fade-in absolute inset-0 h-full w-full bg-ink-solid/40" onClick={onClose} />
+      <div className="animate-pop absolute inset-x-3 top-16 bottom-16 flex flex-col overflow-hidden rounded-3xl bg-card shadow-float">
         <div className="flex shrink-0 items-center justify-between border-b border-line/70 px-4 py-3">
           <h3 className="font-display text-[14.5px] font-semibold tracking-tight">{title}</h3>
           <button onClick={onClose} className="press grid h-8 w-8 place-items-center rounded-full bg-paper text-sub" aria-label="Закрыть">

@@ -48,7 +48,7 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
   return (
     <div className="animate-fade-in absolute inset-0 z-[60] flex flex-col bg-paper">
       {/* Шапка экрана диалога */}
-      <div className="border-b border-line/70 bg-white/90 backdrop-blur-md">
+      <div className="border-b border-line/70 bg-card/90 backdrop-blur-md">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={onClose}
@@ -59,7 +59,7 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
           </button>
           <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-danger-soft text-[#d91a38]">
             <MobiusIcon className="h-6 w-6" strokeWidth={2.1} />
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#22c55e]" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-[#22c55e]" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="font-display text-[14.5px] font-semibold tracking-tight">ИИ-агент МосБизнес</p>
@@ -78,7 +78,7 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
           <div key={i} className={`animate-fade-up flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[13px] font-medium leading-relaxed shadow-card ${
-                m.role === "user" ? "rounded-br-md bg-accent text-white" : "rounded-bl-md bg-white text-ink2"
+                m.role === "user" ? "rounded-br-md bg-accent text-white" : "rounded-bl-md bg-card text-ink2"
               }`}
             >
               {m.text}
@@ -87,7 +87,7 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
         ))}
         {typing && (
           <div className="animate-fade-up flex justify-start">
-            <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md bg-white px-4 py-3 shadow-card">
+            <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md bg-card px-4 py-3 shadow-card">
               {[0, 1, 2].map((i) => (
                 <span key={i} className="typing-dot h-1.5 w-1.5 rounded-full bg-faint" />
               ))}
@@ -99,14 +99,14 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
       {/* Чипы-подсказки */}
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2.5">
         {AI_CHIPS.map((c) => (
-          <button key={c} onClick={() => send(c)} className="press shrink-0 rounded-full border border-line bg-white px-3.5 py-2 text-[12px] font-bold text-accent-deep shadow-card">
+          <button key={c} onClick={() => send(c)} className="press shrink-0 rounded-full border border-line bg-card px-3.5 py-2 text-[12px] font-bold text-accent-deep shadow-card">
             {c}
           </button>
         ))}
       </div>
 
       {/* Поле ввода */}
-      <div className="flex items-center gap-2 border-t border-line/80 bg-white px-3.5 py-3">
+      <div className="flex items-center gap-2 border-t border-line/80 bg-card px-3.5 py-3">
         <div className="flex h-10 min-w-0 flex-1 items-center rounded-full bg-paper px-4">
           <input
             value={input}
@@ -125,7 +125,7 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
           <Icon name="send" className="h-[18px] w-[18px] -translate-x-px" strokeWidth={2} />
         </button>
       </div>
-      <div className="flex justify-center bg-white pb-2">
+      <div className="flex justify-center bg-card pb-2">
         <span className="h-[4px] w-28 rounded-full bg-line" />
       </div>
     </div>

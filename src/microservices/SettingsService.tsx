@@ -17,6 +17,7 @@ interface SettingsState {
   digest: boolean;
   twoFactor: boolean;
   autoSync: boolean;
+  theme: "light" | "dark";
 }
 
 const DEFAULTS: SettingsState = {
@@ -26,6 +27,7 @@ const DEFAULTS: SettingsState = {
   digest: true,
   twoFactor: false,
   autoSync: true,
+  theme: "light",
 };
 
 function load(): SettingsState {
@@ -55,6 +57,10 @@ export default function SettingsService({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  useEffect(() => {
+    document.getElementById("app-shell")?.setAttribute("data-theme", s.theme);
+  }, [s.theme]);
+
   if (!open) return null;
 
   const update = (patch: Partial<SettingsState>) => {
@@ -72,7 +78,7 @@ export default function SettingsService({
   return (
     <div className="absolute inset-0 z-[65]">
       <button
-        className="animate-fade-in absolute inset-0 h-full w-full bg-ink/45"
+        className="animate-fade-in absolute inset-0 h-full w-full bg-ink-solid/45"
         onClick={onClose}
         aria-label="Закрыть настройки"
       />
@@ -83,7 +89,7 @@ export default function SettingsService({
             <h2 className="font-display text-[17px] font-semibold tracking-tight">Настройки</h2>
             <p className="text-[11px] font-semibold text-sub">Микросервис · v1.0</p>
           </div>
-          <button onClick={onClose} className="press grid h-8 w-8 place-items-center rounded-full bg-white text-sub" aria-label="Закрыть">
+          <button onClick={onClose} className="press grid h-8 w-8 place-items-center rounded-full bg-card text-sub" aria-label="Закрыть">
             <Icon name="close" className="h-4 w-4" strokeWidth={2.2} />
           </button>
         </div>
@@ -122,6 +128,18 @@ export default function SettingsService({
               desc="Сводка по экосистеме в понедельник"
               value={s.digest}
               onChange={(v) => update({ digest: v })}
+            />
+          </Section>
+
+          {/* Внешний вид */}
+          <Section icon="moon" title="Внешний вид">
+            <Row
+              icon="moon"
+              tint="#ece9ff"
+              label="Тёмная тема"
+              desc="Тёмное оформление интерфейса"
+              value={s.theme === "dark"}
+              onChange={(v) => { update({ theme: v ? "dark" : "light" }); toast(v ? "Тёмная тема включена" : "Тёмная тема выключена", "moon"); }}
             />
           </Section>
 
@@ -176,7 +194,7 @@ export default function SettingsService({
             <ActionRow icon="doc" tint="#e6efff" label="Пользовательское соглашение" onClick={() => toast("Открываем документ…", "doc")} />
             <ActionRow icon="shield" tint="#e3f6ec" label="Политика конфиденциальности" onClick={() => toast("Открываем документ…", "doc")} />
             <ActionRow icon="mail" tint="#ece9ff" label="Поддержка" desc="help@cevba.mos.ru" onClick={() => toast("Чат поддержки откроется в ИИ-агенте", "mail")} />
-            <div className="flex items-center justify-between rounded-2xl border border-line/80 bg-white px-3.5 py-3 shadow-card">
+            <div className="flex items-center justify-between rounded-2xl border border-line/80 bg-card px-3.5 py-3 shadow-card">
               <span className="text-[13px] font-bold">Версия</span>
               <span className="rounded-full bg-paper px-2.5 py-1 text-[11px] font-extrabold text-sub">2.4.1 (build 2210)</span>
             </div>
@@ -211,10 +229,10 @@ function Row({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-line/80 bg-white px-3.5 py-3 shadow-card">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-line/80 bg-card px-3.5 py-3 shadow-card">
       <div className="flex min-w-0 items-center gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style={{ background: tint }}>
-          <Icon name={icon} className="h-[18px] w-[18px] text-ink2" strokeWidth={2} />
+          <Icon name={icon} className="h-[18px] w-[18px] text-ink2-solid" strokeWidth={2} />
         </span>
         <div className="min-w-0">
           <p className="text-[13px] font-extrabold tracking-tight">{label}</p>
@@ -238,11 +256,11 @@ function ActionRow({
   return (
     <button
       onClick={onClick}
-      className="press group flex w-full items-center justify-between gap-3 rounded-2xl border border-line/80 bg-white px-3.5 py-3 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
+      className="press group flex w-full items-center justify-between gap-3 rounded-2xl border border-line/80 bg-card px-3.5 py-3 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
     >
       <div className="flex min-w-0 items-center gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style={{ background: tint }}>
-          <Icon name={icon} className="h-[18px] w-[18px] text-ink2" strokeWidth={2} />
+          <Icon name={icon} className="h-[18px] w-[18px] text-ink2-solid" strokeWidth={2} />
         </span>
         <div className="min-w-0">
           <p className="text-[13px] font-extrabold tracking-tight">{label}</p>
