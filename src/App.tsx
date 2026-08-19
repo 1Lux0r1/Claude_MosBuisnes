@@ -403,25 +403,60 @@ function ActionSheetView({
     const p = sheet.data;
     return (
       <Sheet open onClose={onClose} title="Предложение партнёра">
-        <div className="flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl text-[13px] font-extrabold" style={{ background: p.logoBg, color: p.logoFg }}>
-            {p.logo}
-          </span>
-          <div>
-            <p className="text-[15px] font-extrabold tracking-tight">{p.name}</p>
-            {p.city && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-[3px] text-[8.5px] font-extrabold uppercase tracking-wide text-white">
-                <Icon name="star" className="h-2.5 w-2.5 fill-[#ffc531] text-[#ffc531]" strokeWidth={1} />
-                Партнёр Москвы
-              </span>
-            )}
+        <div
+          className="relative -mx-5 mb-3.5 flex h-28 items-end overflow-hidden px-5 pb-3"
+          style={{ background: `linear-gradient(135deg, ${p.artFrom}, ${p.artTo})` }}
+        >
+          <Icon
+            name={p.artIcon}
+            className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 text-white opacity-[0.18]"
+            strokeWidth={1.3}
+          />
+          <div className="relative flex items-center gap-3">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/92 text-[13px] font-extrabold backdrop-blur-sm" style={{ color: p.logoFg }}>
+              {p.logo}
+            </span>
+            <div>
+              <p className="text-[16px] font-extrabold tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">{p.name}</p>
+              {p.city && (
+                <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-black/35 px-2 py-[3px] text-[8.5px] font-extrabold uppercase tracking-wide text-white backdrop-blur-sm">
+                  <Icon name="star" className="h-2.5 w-2.5 fill-[#ffc531] text-[#ffc531]" strokeWidth={1} />
+                  Партнёр Москвы
+                </span>
+              )}
+            </div>
           </div>
         </div>
-        <p className="mt-3 text-[13px] font-medium leading-relaxed text-sub">{p.desc}</p>
+
+        <p className="text-[13px] font-medium leading-relaxed text-sub">{p.desc}</p>
+
         <div className="mt-3 rounded-2xl bg-ok-soft p-3.5">
-          <p className="text-[11px] font-extrabold uppercase tracking-wide text-ok">Специальное условие</p>
-          <p className="mt-0.5 text-[15px] font-extrabold text-ok">{p.offer}</p>
+          <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-ok">
+            <Icon name="trend-up" className="h-3.5 w-3.5" strokeWidth={2.4} />
+            Выгода
+          </p>
+          <p className="mt-1 text-[14px] font-extrabold leading-snug text-ok">{p.benefit}</p>
         </div>
+
+        <div className="mt-2.5 rounded-2xl bg-accent-soft p-3.5">
+          <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-accent-deep">
+            <Icon name="spark" className="h-3.5 w-3.5" strokeWidth={2.4} />
+            Почему только здесь
+          </p>
+          <p className="mt-1 text-[12.5px] font-semibold leading-snug text-ink2">{p.unique}</p>
+        </div>
+
+        <ul className="mt-3 space-y-2">
+          {p.details.map((d, i) => (
+            <li key={i} className="flex items-start gap-2.5 rounded-xl bg-paper px-3 py-2.5">
+              <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-ok text-white">
+                <Icon name="check" className="h-2.5 w-2.5" strokeWidth={3} />
+              </span>
+              <span className="text-[12.5px] font-bold leading-snug">{d}</span>
+            </li>
+          ))}
+        </ul>
+
         <button
           onClick={() => {
             toast(`Заявка на подключение отправлена: ${p.name}`, "check");

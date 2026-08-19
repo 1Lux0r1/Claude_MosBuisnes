@@ -195,27 +195,43 @@ export function PartnersBlock({
                   <button
                     key={p.id}
                     onClick={() => onPick(p)}
-                    className="press flex flex-col items-start rounded-2xl border border-line/80 bg-white p-3 text-left shadow-card transition-shadow hover:shadow-float"
+                    className="press group relative flex h-[172px] flex-col justify-between overflow-hidden rounded-2xl p-3 text-left shadow-card transition-shadow hover:shadow-float"
+                    style={{ background: `linear-gradient(135deg, ${p.artFrom}, ${p.artTo})` }}
                   >
-                    <span className="flex w-full items-center justify-between">
+                    {/* тематическая «обложка» вместо фото — крупная иконка водяным знаком поверх градиента */}
+                    <Icon
+                      name={p.artIcon}
+                      className="pointer-events-none absolute -bottom-5 -right-5 h-28 w-28 text-white opacity-[0.18] transition-transform duration-300 group-hover:scale-110"
+                      strokeWidth={1.3}
+                    />
+                    <span
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-20"
+                      style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)" }}
+                    />
+
+                    <span className="relative flex w-full items-start justify-between">
                       <span
-                        className="grid h-9 w-9 place-items-center rounded-xl text-[10.5px] font-extrabold tracking-tight"
-                        style={{ background: p.logoBg, color: p.logoFg }}
+                        className="grid h-9 w-9 place-items-center rounded-xl bg-white/92 text-[10.5px] font-extrabold tracking-tight backdrop-blur-sm"
+                        style={{ color: p.logoFg }}
                       >
                         {p.logo}
                       </span>
                       {p.city && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-[3px] text-[8.5px] font-extrabold uppercase tracking-wide text-white">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2 py-[3px] text-[8.5px] font-extrabold uppercase tracking-wide text-white backdrop-blur-sm">
                           <Icon name="star" className="h-2.5 w-2.5 fill-[#ffc531] text-[#ffc531]" strokeWidth={1} />
-                          Партнёр Москвы
+                          Москвы
                         </span>
                       )}
                     </span>
-                    <span className="mt-2.5 line-clamp-1 text-[12.5px] font-extrabold tracking-tight">{p.name}</span>
-                    <span className="mt-0.5 line-clamp-2 min-h-[28px] text-[11px] font-medium leading-snug text-sub">{p.desc}</span>
-                    <span className="mt-2 inline-flex items-center gap-1 rounded-lg bg-ok-soft px-2 py-1 text-[10.5px] font-extrabold text-ok">
-                      <Icon name="spark" className="h-3 w-3" strokeWidth={2.2} />
-                      {p.offer}
+
+                    <span className="relative">
+                      <span className="block line-clamp-1 text-[13px] font-extrabold tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
+                        {p.name}
+                      </span>
+                      <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-lg bg-white/92 px-2 py-1 text-[10px] font-extrabold text-ink backdrop-blur-sm">
+                        <Icon name="spark" className="h-3 w-3 shrink-0 text-accent" strokeWidth={2.2} />
+                        <span className="truncate">{p.badge}</span>
+                      </span>
                     </span>
                   </button>
                 ))}
