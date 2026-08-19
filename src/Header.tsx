@@ -115,8 +115,8 @@ export default function Header({
             <Icon name="chevron-left" className="h-5 w-5" strokeWidth={2.1} />
           </button>
         ) : (
-          <span className="font-display grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-[8.5px] font-bold text-white">
-            ЦЭВБ
+          <span className="font-display grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-[13px] font-extrabold text-white">
+            МБ
           </span>
         )}
 

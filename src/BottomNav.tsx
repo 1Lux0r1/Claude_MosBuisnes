@@ -74,7 +74,7 @@ export default function BottomNav({
           <button
             onClick={onAI}
             aria-label="Открыть диалог с ИИ-агентом"
-            title="ИИ-агент ЦЭВБ"
+            title="ИИ-агент МосБизнес"
             className="press group grid h-14 w-14 place-items-center rounded-full transition-transform duration-200 hover:scale-105"
             style={{
               background:

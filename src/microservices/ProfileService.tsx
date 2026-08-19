@@ -89,7 +89,7 @@ const SYSTEMS: IntegrationSystem[] = [
     logo: "Б24", logoBg: "#d3f2fd", logoFg: "#0b6aa8", modules: ["CRM", "Задачи", "Сделки"],
   },
   {
-    id: "moysklad", name: "МойСклад", desc: "Остатки и обороты для аналитики ЦЭВБ",
+    id: "moysklad", name: "МойСклад", desc: "Остатки и обороты для аналитики МосБизнес",
     logo: "МС", logoBg: "#e3f6ec", logoFg: "#0f7a3d", modules: ["Склад", "Закупки", "Обороты"],
   },
 ];
@@ -511,7 +511,7 @@ export default function ProfileService() {
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wide text-white/85 ring-1 ring-white/10">
                   <Icon name="shield" className="h-3 w-3" strokeWidth={2.2} />
-                  Резидент ЦЭВБ
+                  Резидент МосБизнес
                 </span>
                 <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wide text-white/85 ring-1 ring-white/10">
                   ИНН 7712345678
