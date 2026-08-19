@@ -53,32 +53,30 @@ function EventForm({
         }`}
       />
       {error && <p className="mt-1 text-[11px] font-bold text-danger">Введите название события</p>}
-      <div className="mt-2.5 flex items-center gap-2">
-        <label className="flex h-10 items-center gap-2 rounded-xl border border-line bg-card px-3">
-          <Icon name="clock" className="h-4 w-4 text-sub" strokeWidth={2} />
-          <input
-            type="time"
-            value={form.time}
-            onChange={(e) => onChange({ ...form, time: e.target.value })}
-            className="bg-transparent text-[13px] font-bold outline-none"
-          />
-        </label>
-        <div className="flex gap-1.5">
-          {(Object.keys(KIND_META) as EventKind[]).map((k) => (
-            <button
-              key={k}
-              onClick={() => onChange({ ...form, kind: k })}
-              className="press rounded-full px-2.5 py-1.5 text-[10.5px] font-extrabold transition-all"
-              style={
-                form.kind === k
-                  ? { background: KIND_META[k].dot, color: "#fff" }
-                  : { background: KIND_META[k].bg, color: KIND_META[k].fg }
-              }
-            >
-              {KIND_META[k].label}
-            </button>
-          ))}
-        </div>
+      <label className="mt-2.5 flex h-10 w-full items-center gap-2 rounded-xl border border-line bg-card px-3">
+        <Icon name="clock" className="h-4 w-4 shrink-0 text-sub" strokeWidth={2} />
+        <input
+          type="time"
+          value={form.time}
+          onChange={(e) => onChange({ ...form, time: e.target.value })}
+          className="w-full bg-transparent text-[13px] font-bold outline-none"
+        />
+      </label>
+      <div className="mt-2 flex gap-1.5">
+        {(Object.keys(KIND_META) as EventKind[]).map((k) => (
+          <button
+            key={k}
+            onClick={() => onChange({ ...form, kind: k })}
+            className="press flex-1 rounded-full px-2.5 py-1.5 text-[10.5px] font-extrabold transition-all"
+            style={
+              form.kind === k
+                ? { background: KIND_META[k].dot, color: "#fff" }
+                : { background: KIND_META[k].bg, color: KIND_META[k].fg }
+            }
+          >
+            {KIND_META[k].label}
+          </button>
+        ))}
       </div>
       <div className="mt-3 flex justify-end gap-2">
         <button onClick={onCancel} className="press rounded-full bg-card px-4 py-2 text-[12px] font-extrabold text-sub">

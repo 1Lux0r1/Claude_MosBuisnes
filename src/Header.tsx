@@ -168,7 +168,7 @@ export default function Header({
 
           {menuOpen && (
             <div
-              className="animate-pop absolute right-0 top-[46px] z-50 w-48 origin-top-right overflow-hidden rounded-2xl border border-line/80 bg-card/95 shadow-float backdrop-blur-md"
+              className="animate-pop absolute right-0 top-[46px] z-50 w-48 origin-top-right overflow-hidden rounded-2xl border border-line/80 bg-card shadow-float"
               role="menu"
             >
               <div className="border-b border-line/60 px-4 py-2.5">
