@@ -38,20 +38,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/* ---------- Нижняя шторка: фон, Esc, блокировка прокрутки ----------
-   Рендерится через портал в #app-shell: если Sheet вызвать из компонента,
-   лежащего внутри прокручиваемого <main> (overflow-y-auto), браузер обрежет
-   абсолютно спозиционированную шторку до видимого фрагмента main — портал
-   выносит её DOM-узел на уровень Shell, где absolute inset-0 работает как
-   задумано, независимо от места вызова. */
-export function Sheet({
-  open, onClose, title, children,
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  children: ReactNode;
-}) {
+/* Портал в #app-shell: если overlay вызвать из компонента, лежащего внутри
+   прокручиваемого <main> (overflow-y-auto), браузер обрежет абсолютно
+   спозиционированный оверлей до видимого фрагмента main — портал выносит
+   его DOM-узел на уровень Shell, где absolute inset-0 работает как задумано,
+   независимо от места вызова. Используется и Sheet, и ChartOverlay. */
+function useShellPortal() {
   const [container] = useState(() => {
     const el = document.createElement("div");
     el.className = "contents";
@@ -66,12 +58,29 @@ export function Sheet({
     };
   }, [container]);
 
+  return container;
+}
+
+function useEscapeKey(active: boolean, onEscape: () => void) {
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    if (!active) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onEscape();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [active, onEscape]);
+}
+
+/* ---------- Нижняя шторка ---------- */
+export function Sheet({
+  open, onClose, title, children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  const container = useShellPortal();
+  useEscapeKey(open, onClose);
 
   if (!open) return null;
   return createPortal(
@@ -86,6 +95,38 @@ export function Sheet({
           </button>
         </div>
         <div className="no-scrollbar max-h-[68vh] overflow-y-auto px-5 pb-8">{children}</div>
+      </div>
+    </div>,
+    container,
+  );
+}
+
+/* ---------- Центрированный оверлей во весь экран (для увеличенного графика):
+   в отличие от Sheet не прижат к низу — сверху и снизу остаётся видимый,
+   притемнённый (не полностью чёрный) фон. ---------- */
+export function ChartOverlay({
+  open, onClose, title, children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  const container = useShellPortal();
+  useEscapeKey(open, onClose);
+
+  if (!open) return null;
+  return createPortal(
+    <div className="absolute inset-0 z-[75]">
+      <button aria-label="Закрыть" className="animate-fade-in absolute inset-0 h-full w-full bg-ink/40" onClick={onClose} />
+      <div className="animate-pop absolute inset-x-3 top-16 bottom-16 flex flex-col overflow-hidden rounded-3xl bg-white shadow-float">
+        <div className="flex shrink-0 items-center justify-between border-b border-line/70 px-4 py-3">
+          <h3 className="font-display text-[14.5px] font-semibold tracking-tight">{title}</h3>
+          <button onClick={onClose} className="press grid h-8 w-8 place-items-center rounded-full bg-paper text-sub" aria-label="Закрыть">
+            <Icon name="close" className="h-4 w-4" strokeWidth={2.2} />
+          </button>
+        </div>
+        <div className="flex min-h-0 flex-1 items-center px-3">{children}</div>
       </div>
     </div>,
     container,

@@ -1,57 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, MobiusIcon, type IconName } from "../icons";
 import { Reveal, Toggle, useToast } from "../ui";
-import { addDays, startOfToday } from "../data";
+import { addDays, startOfToday, BANKS, BANKS_STORAGE_KEY, type BankAccount, type BankInfo } from "../data";
 
 /* ============================================================
    Микросервис «Личный кабинет» · v2.1
    Автономный модуль: финансы (мультибанковские счета),
    заявления, интеграции с учётными системами, сотрудники.
    Состояние — в localStorage, навигация — внутренняя.
+   Банки (BANKS) — общие с обменом валют в Carousels.tsx,
+   заданы в data.ts.
    ============================================================ */
-
-/* ---------- Банки и счета ---------- */
-interface BankAccount { id: string; name: string; mask: string; balance: number }
-interface BankInfo { id: string; name: string; logo: string; logoBg: string; logoFg: string; accounts: BankAccount[] }
-
-const BANKS: BankInfo[] = [
-  {
-    id: "sber", name: "СберБизнес", logo: "С", logoBg: "#e3f6ec", logoFg: "#148a4c",
-    accounts: [
-      { id: "sb1", name: "Расчётный счёт", mask: "•• 4821", balance: 2_480_000 },
-      { id: "sb2", name: "Резервный счёт", mask: "•• 9307", balance: 640_000 },
-      { id: "sb3", name: "Депозит «Стабильный»", mask: "•• 1155", balance: 1_200_000 },
-    ],
-  },
-  {
-    id: "tbank", name: "Т-Банк Бизнес", logo: "Т", logoBg: "#fff3d4", logoFg: "#8a6100",
-    accounts: [
-      { id: "tb1", name: "Расчётный счёт", mask: "•• 7742", balance: 1_860_000 },
-      { id: "tb2", name: "Накопительный счёт", mask: "•• 3018", balance: 950_000 },
-    ],
-  },
-  {
-    id: "alfa", name: "Альфа-Бизнес", logo: "А", logoBg: "#fdeceb", logoFg: "#e11d3a",
-    accounts: [
-      { id: "af1", name: "Расчётный счёт", mask: "•• 5210", balance: 3_120_000 },
-      { id: "af2", name: "Валютный (USD, экв.)", mask: "•• 8864", balance: 410_000 },
-    ],
-  },
-  {
-    id: "vtb", name: "ВТБ Бизнес", logo: "В", logoBg: "#e6efff", logoFg: "#0a6bff",
-    accounts: [
-      { id: "vt1", name: "Расчётный счёт", mask: "•• 6033", balance: 2_050_000 },
-      { id: "vt2", name: "Овернайт", mask: "•• 2276", balance: 720_000 },
-    ],
-  },
-  {
-    id: "tochka", name: "Точка Банк", logo: "•", logoBg: "#0e1220", logoFg: "#ffffff",
-    accounts: [
-      { id: "tc1", name: "Расчётный счёт", mask: "•• 1908", balance: 1_540_000 },
-      { id: "tc2", name: "Сейв-счёт", mask: "•• 4471", balance: 830_000 },
-    ],
-  },
-];
 
 /* ---------- Заявления ---------- */
 type AppStatus = "review" | "docs" | "approved" | "rejected" | "draft";
@@ -123,7 +82,6 @@ const INITIAL_EMPLOYEES: Employee[] = [
 const AVATAR_COLORS = ["#0a6bff", "#148a4c", "#b97a00", "#e11d3a", "#0e8a8a"];
 
 /* ---------- Хранилище ---------- */
-const LS_BANKS = "cevba-banks-v2";
 const LS_INTEGRATIONS = "cevba-integrations-v1";
 const LS_EMPLOYEES = "cevba-employees-v1";
 
@@ -174,7 +132,7 @@ export default function ProfileService() {
   const [view, setView] = useState<View>({ t: "root" });
 
   /* --- Финансы: несколько банков одновременно --- */
-  const [bankIds, setBankIds] = useState<string[]>(() => loadJSON<string[]>(LS_BANKS, []));
+  const [bankIds, setBankIds] = useState<string[]>(() => loadJSON<string[]>(BANKS_STORAGE_KEY, []));
   const [connecting, setConnecting] = useState<string | null>(null);
   const [hideBalance, setHideBalance] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -204,7 +162,7 @@ export default function ProfileService() {
 
   const persistBanks = (ids: string[]) => {
     setBankIds(ids);
-    localStorage.setItem(LS_BANKS, JSON.stringify(ids));
+    localStorage.setItem(BANKS_STORAGE_KEY, JSON.stringify(ids));
   };
 
   const connectBank = (b: BankInfo) => {

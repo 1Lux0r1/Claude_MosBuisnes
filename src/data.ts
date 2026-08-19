@@ -319,11 +319,120 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
   },
 ];
 
+/* ---------- Банки и счета (общие данные для «Финансов» и обмена валюты) ---------- */
+export interface BankAccount { id: string; name: string; mask: string; balance: number }
+export interface BankFxBalance { code: string; amount: number }
+export interface BankInfo {
+  id: string; name: string; logo: string; logoBg: string; logoFg: string;
+  accounts: BankAccount[];
+  fx?: BankFxBalance[];
+}
+
+export const BANKS: BankInfo[] = [
+  {
+    id: "sber", name: "СберБизнес", logo: "С", logoBg: "#e3f6ec", logoFg: "#148a4c",
+    accounts: [
+      { id: "sb1", name: "Расчётный счёт", mask: "•• 4821", balance: 2_480_000 },
+      { id: "sb2", name: "Резервный счёт", mask: "•• 9307", balance: 640_000 },
+      { id: "sb3", name: "Депозит «Стабильный»", mask: "•• 1155", balance: 1_200_000 },
+    ],
+  },
+  {
+    id: "tbank", name: "Т-Банк Бизнес", logo: "Т", logoBg: "#fff3d4", logoFg: "#8a6100",
+    accounts: [
+      { id: "tb1", name: "Расчётный счёт", mask: "•• 7742", balance: 1_860_000 },
+      { id: "tb2", name: "Накопительный счёт", mask: "•• 3018", balance: 950_000 },
+    ],
+    fx: [{ code: "CNY", amount: 58_400 }],
+  },
+  {
+    id: "alfa", name: "Альфа-Бизнес", logo: "А", logoBg: "#fdeceb", logoFg: "#e11d3a",
+    accounts: [
+      { id: "af1", name: "Расчётный счёт", mask: "•• 5210", balance: 3_120_000 },
+      { id: "af2", name: "Валютный (USD, экв.)", mask: "•• 8864", balance: 410_000 },
+    ],
+    fx: [{ code: "USD", amount: 4_820 }],
+  },
+  {
+    id: "vtb", name: "ВТБ Бизнес", logo: "В", logoBg: "#e6efff", logoFg: "#0a6bff",
+    accounts: [
+      { id: "vt1", name: "Расчётный счёт", mask: "•• 6033", balance: 2_050_000 },
+      { id: "vt2", name: "Овернайт", mask: "•• 2276", balance: 720_000 },
+    ],
+    fx: [{ code: "EUR", amount: 1_300 }],
+  },
+  {
+    id: "tochka", name: "Точка Банк", logo: "•", logoBg: "#0e1220", logoFg: "#ffffff",
+    accounts: [
+      { id: "tc1", name: "Расчётный счёт", mask: "•• 1908", balance: 1_540_000 },
+      { id: "tc2", name: "Сейв-счёт", mask: "•• 4471", balance: 830_000 },
+    ],
+  },
+];
+
+export const BANKS_STORAGE_KEY = "cevba-banks-v2";
+
+/** Банки, которые пользователь подключил в «Финансах» — читаем тот же localStorage,
+ *  которым управляет ProfileService, чтобы показать валютные остатки при обмене. */
+export function loadConnectedBankIds(): string[] {
+  try {
+    const raw = localStorage.getItem(BANKS_STORAGE_KEY);
+    const ids: unknown = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(ids) && ids.every((x) => typeof x === "string")) return ids;
+  } catch {
+    /* повреждённые данные — считаем, что банки не подключены */
+  }
+  return [];
+}
+
 /* ---------- Валюты ---------- */
-export const CURRENCIES: { code: string; country: string; rate: string; chg: string; up: boolean; flag: "us" | "eu" | "cn"; spark: number[] }[] = [
-  { code: "USD", country: "Доллар США", rate: "92,45", chg: "+0,35%", up: true, flag: "us", spark: [88, 89, 88.4, 90, 91.2, 90.6, 91.8, 92.45] },
-  { code: "EUR", country: "Евро", rate: "99,87", chg: "−0,41%", up: false, flag: "eu", spark: [102, 101.4, 101.9, 101.1, 100.6, 100.9, 100.2, 99.87] },
-  { code: "CNY", country: "Китайский юань", rate: "12,74", chg: "+0,39%", up: true, flag: "cn", spark: [12.2, 12.3, 12.25, 12.4, 12.5, 12.45, 12.6, 12.74] },
+export interface CurrencyOffer { bankId: string; buy: number; sell: number }
+
+export interface CurrencyItem {
+  code: string;
+  country: string;
+  rate: string;
+  chg: string;
+  up: boolean;
+  flag: "us" | "eu" | "cn";
+  spark: number[];
+  offers: CurrencyOffer[];
+}
+
+export const CURRENCIES: CurrencyItem[] = [
+  {
+    code: "USD", country: "Доллар США", rate: "92,45", chg: "+0,35%", up: true, flag: "us",
+    spark: [88, 88.3, 89, 88.7, 88.4, 89.1, 90, 89.6, 91.2, 90.8, 90.6, 91.3, 91.8, 91.5, 92.1, 92.45],
+    offers: [
+      { bankId: "sber", buy: 91.80, sell: 93.10 },
+      { bankId: "tbank", buy: 92.00, sell: 92.95 },
+      { bankId: "alfa", buy: 91.70, sell: 93.25 },
+      { bankId: "vtb", buy: 91.90, sell: 93.00 },
+      { bankId: "tochka", buy: 91.60, sell: 93.40 },
+    ],
+  },
+  {
+    code: "EUR", country: "Евро", rate: "99,87", chg: "−0,41%", up: false, flag: "eu",
+    spark: [102, 101.7, 101.4, 101.8, 101.9, 101.5, 101.1, 100.8, 100.6, 100.9, 100.7, 100.2, 100.4, 99.9, 100.1, 99.87],
+    offers: [
+      { bankId: "sber", buy: 99.10, sell: 100.60 },
+      { bankId: "tbank", buy: 99.30, sell: 100.40 },
+      { bankId: "alfa", buy: 99.00, sell: 100.75 },
+      { bankId: "vtb", buy: 99.20, sell: 100.50 },
+      { bankId: "tochka", buy: 98.90, sell: 100.90 },
+    ],
+  },
+  {
+    code: "CNY", country: "Китайский юань", rate: "12,74", chg: "+0,39%", up: true, flag: "cn",
+    spark: [12.2, 12.25, 12.3, 12.22, 12.28, 12.35, 12.4, 12.38, 12.5, 12.46, 12.45, 12.52, 12.6, 12.58, 12.66, 12.74],
+    offers: [
+      { bankId: "sber", buy: 12.62, sell: 12.86 },
+      { bankId: "tbank", buy: 12.66, sell: 12.82 },
+      { bankId: "alfa", buy: 12.60, sell: 12.90 },
+      { bankId: "vtb", buy: 12.64, sell: 12.85 },
+      { bankId: "tochka", buy: 12.58, sell: 12.93 },
+    ],
+  },
 ];
 
 /* ---------- Новости ---------- */
