@@ -1,16 +1,15 @@
-import { useState } from "react";
 import { Icon, type IconName } from "./icons";
-import { Dots, Reveal, Sheet, useSnap, useToast } from "./ui";
+import { Dots, Reveal, Sheet, useSnap } from "./ui";
 import {
   DEFAULT_QUICK_ACTION_IDS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS,
   type Partner, type QuickAction, type ServiceSection,
 } from "./data";
 
-const QUICK_ACTIONS_KEY = "mb-quick-actions";
-const MIN_QUICK_ACTIONS = 3;
-const MAX_QUICK_ACTIONS = 6;
+export const QUICK_ACTIONS_KEY = "mb-quick-actions";
+export const MIN_QUICK_ACTIONS = 3;
+export const MAX_QUICK_ACTIONS = 6;
 
-function loadEnabledIds(): string[] {
+export function loadEnabledQuickActionIds(): string[] {
   try {
     const raw = localStorage.getItem(QUICK_ACTIONS_KEY);
     const ids: unknown = raw ? JSON.parse(raw) : null;
@@ -30,32 +29,13 @@ function chunkIntoRows<T>(items: T[]): T[][] {
 }
 
 /* ---------- Быстрые действия: настраиваемая панель ---------- */
-export function QuickActions({ onPick }: { onPick: (a: QuickAction) => void }) {
-  const toast = useToast();
-  const [enabled, setEnabled] = useState<string[]>(loadEnabledIds);
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  const persist = (ids: string[]) => {
-    setEnabled(ids);
-    localStorage.setItem(QUICK_ACTIONS_KEY, JSON.stringify(ids));
-  };
-
-  const toggle = (id: string) => {
-    if (enabled.includes(id)) {
-      if (enabled.length <= MIN_QUICK_ACTIONS) {
-        toast(`Минимум ${MIN_QUICK_ACTIONS} действия на панели`, "alert");
-        return;
-      }
-      persist(enabled.filter((x) => x !== id));
-    } else {
-      if (enabled.length >= MAX_QUICK_ACTIONS) {
-        toast(`Максимум ${MAX_QUICK_ACTIONS} действий на панели`, "alert");
-        return;
-      }
-      persist([...enabled, id]);
-    }
-  };
-
+export function QuickActions({
+  onPick, enabled, onOpenPicker,
+}: {
+  onPick: (a: QuickAction) => void;
+  enabled: string[];
+  onOpenPicker: () => void;
+}) {
   const visible = QUICK_ACTIONS.filter((a) => enabled.includes(a.id));
   const rows = chunkIntoRows(visible);
 
@@ -65,7 +45,7 @@ export function QuickActions({ onPick }: { onPick: (a: QuickAction) => void }) {
         <div className="flex items-center justify-between">
           <h2 className="font-display text-[15px] font-semibold tracking-tight">Быстрые действия</h2>
           <button
-            onClick={() => setPickerOpen(true)}
+            onClick={onOpenPicker}
             className="press inline-flex items-center gap-1.5 rounded-full py-1.5 pr-1 text-[12.5px] font-bold text-accent"
           >
             Настроить
@@ -98,19 +78,14 @@ export function QuickActions({ onPick }: { onPick: (a: QuickAction) => void }) {
           ))}
         </div>
       </section>
-
-      <QuickActionsPicker
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        enabled={enabled}
-        onToggle={toggle}
-      />
     </Reveal>
   );
 }
 
-/* ---------- Шторка выбора действий для панели ---------- */
-function QuickActionsPicker({
+/* ---------- Шторка выбора действий для панели (рендерится на уровне Shell,
+   а не внутри прокручиваемого <main> — иначе overflow-y-auto у <main> обрежет
+   абсолютно спозиционированную шторку до крошечного видимого фрагмента) ---------- */
+export function QuickActionsPicker({
   open, onClose, enabled, onToggle,
 }: {
   open: boolean;
