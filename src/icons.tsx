@@ -195,6 +195,7 @@ const paths: Record<string, JSX.Element> = {
       <path d="M8 11V7a4 4 0 0 1 8 0v4M12 14.5v2" />
     </>
   ),
+  moon: <path d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5a7 7 0 0 0 10.8 10.8Z" />,
 };
 
 export type IconName = keyof typeof paths;
@@ -243,6 +244,42 @@ export function MobiusIcon({
         d="M6.5 6.6c3 1.5 8 8.5 11 10.8M17.5 6.6c-1.9 1-4.2 3-6.5 5.4-2.3 2.4-4.6 4.4-6.5 5.4"
         stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" opacity="0.72"
       />
+    </svg>
+  );
+}
+
+/* Логотип «МосБизнес»: башни Кремля, слитые в силуэт буквы «М»,
+   поверх — сеть узлов экосистемы со «своим» акцентным узлом (бренд-марка,
+   используется в шапке и фавиконе — фон всегда светлый, не зависит от темы) */
+export function KremlinLogo({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 136 100" fill="none" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="kremlin-logo-fill" x1="68" y1="4" x2="68" y2="88" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#274c96" />
+          <stop offset="1" stopColor="#0c1e46" />
+        </linearGradient>
+      </defs>
+      <path
+        fill="url(#kremlin-logo-fill)"
+        d="M14 88 14 50 24 32 34 50 46 76 58 40 68 14 78 40 90 76 102 50 112 32 122 50 122 88Z"
+      />
+      <path stroke="url(#kremlin-logo-fill)" strokeWidth="2" strokeLinecap="round" d="M68 14 68 7" />
+      <path
+        fill="url(#kremlin-logo-fill)"
+        d="M68 0.8 68.8 3 71 3 69.2 4.4 69.9 6.6 68 5.3 66.1 6.6 65 4.4 65 3 67.2 3Z"
+      />
+      <g stroke="#fff" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M44 58 60 64 68 74 76 64 92 58M60 64 44 58M68 74 60 64M68 74 76 64M68 74 100 80M76 64 100 80M92 58 100 80" />
+      </g>
+      <g fill="#fff">
+        <circle cx="44" cy="58" r="3.6" />
+        <circle cx="60" cy="64" r="3.6" />
+        <circle cx="76" cy="64" r="3.6" />
+        <circle cx="92" cy="58" r="3.6" />
+      </g>
+      <circle cx="68" cy="74" r="4.2" fill="#fff" />
+      <circle cx="100" cy="80" r="5.2" fill="#f5333f" />
     </svg>
   );
 }

@@ -88,7 +88,7 @@ export default function BottomNav({
         </div>
       </div>
 
-      <div className="border-t border-line/80 bg-white/95 pb-4 pt-2 backdrop-blur-md">
+      <div className="border-t border-line/80 bg-card/95 pb-4 pt-2 backdrop-blur-md">
         <div className="grid grid-cols-4 items-start">
           {TABS.map((t) => {
             const badge = t.id === 2 ? eventsBadge : t.id === 3 ? profileBadge : 0;
@@ -96,7 +96,7 @@ export default function BottomNav({
           })}
         </div>
       </div>
-      <div className="flex justify-center bg-white/95 pb-2 backdrop-blur-md">
+      <div className="flex justify-center bg-card/95 pb-2 backdrop-blur-md">
         <span className="h-[4px] w-32 rounded-full bg-ink/85" />
       </div>
     </nav>
