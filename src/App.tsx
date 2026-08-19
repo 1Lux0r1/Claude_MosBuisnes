@@ -5,7 +5,9 @@ import AIAssistant from "./AIAssistant";
 import CalendarStrip from "./CalendarStrip";
 import { CurrencyCarousel, NewsCarousel } from "./Carousels";
 import { PartnersBlock, QuickActions, ServiceSections } from "./HomeBlocks";
-import { EventsScreen, OfflineError, ProfileScreen, ServicesScreen } from "./screens";
+import { EventsScreen, OfflineError, ServicesScreen } from "./screens";
+import ProfileService from "./microservices/ProfileService";
+import SettingsService from "./microservices/SettingsService";
 import { HomeSkeleton, Reveal, Sheet, ToastProvider, useToast } from "./ui";
 import { Icon } from "./icons";
 import {
@@ -31,7 +33,6 @@ export default function App() {
   const [servicesCategory, setServicesCategory] = useState("Все");
   const [registered, setRegistered] = useState<Set<string>>(new Set());
   const [profileRead, setProfileRead] = useState(false);
-  const [notif, setNotif] = useState(true);
   const touchX = useRef<number | null>(null);
   const touchY = useRef<number | null>(null);
   const skipSwipe = useRef(false);
@@ -133,8 +134,6 @@ export default function App() {
             setServicesCategory={setServicesCategory}
             registered={registered}
             setRegistered={setRegistered}
-            notif={notif}
-            setNotif={setNotif}
             profileRead={profileRead}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
@@ -168,8 +167,6 @@ function Shell(props: {
   setServicesCategory: (c: string) => void;
   registered: Set<string>;
   setRegistered: (s: Set<string>) => void;
-  notif: boolean;
-  setNotif: (v: boolean) => void;
   profileRead: boolean;
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchEnd: (e: React.TouchEvent) => void;
@@ -180,18 +177,28 @@ function Shell(props: {
 }) {
   const {
     tab, dir, booting, offline, setOffline, query, setQuery, aiOpen, setAiOpen, sheet, setSheet,
-    servicesCategory, setServicesCategory, registered, setRegistered, notif, setNotif, profileRead,
+    servicesCategory, setServicesCategory, registered, setRegistered, profileRead,
     onTouchStart, onTouchEnd, onBack, onGoTab, onRetry, onHit,
   } = props;
 
+  const toast = useToast();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const eventsBadge = useMemo(() => Math.max(0, 3 - registered.size), [registered]);
+
+  const handleLogout = () => {
+    setSettingsOpen(false);
+    toast("Вы вышли из аккаунта (демо)", "logout");
+    onGoTab(0);
+  };
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <Header
         tab={tab}
         onBack={onBack}
-        onProfile={() => onGoTab(3)}
+        onOpenProfile={() => onGoTab(3)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onLogout={handleLogout}
         query={query}
         setQuery={setQuery}
         onHit={onHit}
@@ -239,7 +246,7 @@ function Shell(props: {
                 }}
               />
             )}
-            {tab === 3 && <ProfileScreen offline={offline} onOffline={setOffline} notif={notif} onNotif={setNotif} />}
+            {tab === 3 && <ProfileService />}
           </>
         )}
       </main>
@@ -253,6 +260,7 @@ function Shell(props: {
       />
 
       <AIAssistant open={aiOpen} onClose={() => setAiOpen(false)} />
+      <SettingsService open={settingsOpen} onClose={() => setSettingsOpen(false)} offline={offline} onOffline={setOffline} />
       <ActionSheetView sheet={sheet} onClose={() => setSheet(null)} onNavigate={setSheet} />
     </div>
   );
