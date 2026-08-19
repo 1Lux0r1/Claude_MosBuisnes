@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Icon, type IconName } from "./icons";
-import { EmptyState, ErrorState, Reveal, Toggle, useToast } from "./ui";
+import { EmptyState, ErrorState, Reveal, useToast } from "./ui";
 import {
   SERVICE_CATALOG, addDays, eventsForDate, startOfToday, type DayEvent, type EventKind,
 } from "./data";
@@ -175,90 +175,6 @@ export function EventsScreen({
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-/* ---------- Личный кабинет ---------- */
-export function ProfileScreen({
-  offline, onOffline, notif, onNotif,
-}: {
-  offline: boolean;
-  onOffline: (v: boolean) => void;
-  notif: boolean;
-  onNotif: (v: boolean) => void;
-}) {
-  const toast = useToast();
-
-  return (
-    <div className="px-4 pt-4 pb-8">
-      <Reveal>
-        <div className="flex items-center gap-4 rounded-2xl border border-line/80 bg-white p-4 shadow-card">
-          <span className="font-display grid h-14 w-14 shrink-0 place-items-center rounded-full bg-accent-soft text-[16px] font-semibold text-accent-deep">
-            АП
-          </span>
-          <div className="min-w-0">
-            <p className="text-[16px] font-extrabold tracking-tight">Анна Петрова</p>
-            <p className="text-[12px] font-semibold text-sub">ООО «Вектор» · ИНН 7712345678</p>
-            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-ok-soft px-2 py-0.5 text-[10px] font-extrabold text-ok">
-              <Icon name="shield" className="h-3 w-3" strokeWidth={2.2} />
-              Резидент ЦЭВБ
-            </span>
-          </div>
-        </div>
-      </Reveal>
-
-      <div className="mt-4 space-y-2.5">
-        <Reveal delay={60}>
-          <div className="flex items-center justify-between rounded-2xl border border-line/80 bg-white p-4 shadow-card">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-paper text-ink2"><Icon name="bell" className="h-5 w-5" /></span>
-              <div>
-                <p className="text-[13.5px] font-extrabold">Push-уведомления</p>
-                <p className="text-[11.5px] font-medium text-sub">Дедлайны и меры поддержки</p>
-              </div>
-            </div>
-            <Toggle
-              checked={notif}
-              onChange={(v) => {
-                onNotif(v);
-                toast(v ? "Push-уведомления включены" : "Push-уведомления выключены", "bell");
-              }}
-            />
-          </div>
-        </Reveal>
-
-        <Reveal delay={120}>
-          <div className="flex items-center justify-between rounded-2xl border border-line/80 bg-white p-4 shadow-card">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-paper text-ink2"><Icon name="wifi-off" className="h-5 w-5" /></span>
-              <div>
-                <p className="text-[13.5px] font-extrabold">Офлайн-режим</p>
-                <p className="text-[11.5px] font-medium text-sub">Демо состояния «нет сети»</p>
-              </div>
-            </div>
-            <Toggle
-              checked={offline}
-              onChange={(v) => {
-                onOffline(v);
-                toast(v ? "Офлайн-режим включён" : "Соединение восстановлено", v ? "wifi-off" : "check");
-              }}
-            />
-          </div>
-        </Reveal>
-
-        <Reveal delay={180}>
-          <button
-            onClick={() => toast("Вы вышли из аккаунта (демо)", "logout")}
-            className="press flex w-full items-center gap-3 rounded-2xl border border-line/80 bg-white p-4 text-left shadow-card transition-colors hover:bg-danger-soft"
-          >
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-danger-soft text-danger"><Icon name="logout" className="h-5 w-5" /></span>
-            <span className="text-[13.5px] font-extrabold text-danger">Выйти из аккаунта</span>
-          </button>
-        </Reveal>
-      </div>
-
-      <p className="mt-6 text-center text-[10.5px] font-bold text-faint">ЦЭВБ Москва · версия 2.4.1</p>
     </div>
   );
 }

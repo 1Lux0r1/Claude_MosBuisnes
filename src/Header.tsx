@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Icon } from "./icons";
+import { Icon, type IconName } from "./icons";
 import { SEARCH_INDEX, type SearchHit } from "./data";
 
 const GROUP_ICON: Record<string, string> = { Действия: "spark", Услуги: "clipboard", "Партнёры": "star", Новости: "news" };
@@ -45,21 +45,43 @@ function StatusBar({ offline }: { offline: boolean }) {
 }
 
 export default function Header({
-  tab, onBack, onProfile, query, setQuery, onHit, offline,
+  tab, onBack, onOpenProfile, onOpenSettings, onLogout, query, setQuery, onHit, offline,
 }: {
   tab: number;
   onBack: () => void;
-  onProfile: () => void;
+  onOpenProfile: () => void;
+  onOpenSettings: () => void;
+  onLogout: () => void;
   query: string;
   setQuery: (q: string) => void;
   onHit: (h: SearchHit) => void;
   offline: boolean;
 }) {
   const [focused, setFocused] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const blurTimer = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => window.clearTimeout(blurTimer.current), []);
+
+  /* Закрытие меню профиля по клику вне его */
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  /* При смене вкладки меню закрывается — иконка сама по себе никуда не ведёт */
+  useEffect(() => setMenuOpen(false), [tab]);
 
   const hits = query.trim()
     ? SEARCH_INDEX.filter((h) => (h.title + " " + (h.sub ?? "")).toLowerCase().includes(query.trim().toLowerCase())).slice(0, 7)
@@ -73,6 +95,12 @@ export default function Header({
     setFocused(false);
     inputRef.current?.blur();
   };
+
+  const menuItems: { label: string; icon: IconName; danger?: boolean; action: () => void }[] = [
+    { label: "Профиль", icon: "user", action: onOpenProfile },
+    { label: "Настройки", icon: "settings", action: onOpenSettings },
+    { label: "Выйти", icon: "logout", danger: true, action: onLogout },
+  ];
 
   return (
     <header className="relative z-40 border-b border-line/70 bg-white/90 backdrop-blur-md">
@@ -118,14 +146,57 @@ export default function Header({
           </div>
         </div>
 
-        <button
-          onClick={onProfile}
-          className="press relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-soft text-[13px] font-extrabold text-accent-deep"
-          aria-label="Профиль"
-        >
-          АП
-          <span className="absolute right-0 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-danger" />
-        </button>
+        {/* Аватар: только открывает выпадающее меню, никуда не переводит */}
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setMenuOpen((v) => !v);
+            }}
+            className={`press relative grid h-10 w-10 place-items-center rounded-full text-[13px] font-extrabold transition-all duration-300 ${
+              menuOpen ? "bg-accent text-white ring-2 ring-accent/30" : "bg-accent-soft text-accent-deep"
+            }`}
+            aria-label="Меню профиля"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+          >
+            АП
+            <span className={`absolute right-0 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-danger transition-opacity duration-300 ${menuOpen ? "opacity-0" : "opacity-100"}`} />
+          </button>
+
+          {menuOpen && (
+            <div
+              className="animate-pop absolute right-0 top-[46px] z-50 w-48 origin-top-right overflow-hidden rounded-2xl border border-line/80 bg-white/95 shadow-float backdrop-blur-md"
+              role="menu"
+            >
+              <div className="border-b border-line/60 px-4 py-2.5">
+                <p className="text-[12.5px] font-extrabold tracking-tight">Анна Петрова</p>
+                <p className="text-[10.5px] font-semibold text-sub">ООО «Вектор Групп»</p>
+              </div>
+              {menuItems.map((item) => (
+                <button
+                  key={item.label}
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    item.action();
+                  }}
+                  className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+                    item.danger ? "text-danger hover:bg-danger-soft/60" : "text-ink2 hover:bg-paper"
+                  }`}
+                >
+                  <Icon name={item.icon} className="h-[18px] w-[18px]" strokeWidth={2} />
+                  <span className="text-[13px] font-bold">{item.label}</span>
+                  {item.label === "Профиль" && tab === 3 && (
+                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {showOverlay && (
