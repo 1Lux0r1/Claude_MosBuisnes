@@ -212,7 +212,7 @@ function Shell(props: {
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
+    <div id="app-shell" className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <Header
         tab={tab}
         onBack={onBack}

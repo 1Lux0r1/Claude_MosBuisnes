@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 
 /* ---------- Тосты (z-80 — выше шторок) ---------- */
@@ -37,7 +38,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/* ---------- Нижняя шторка: фон, Esc, блокировка прокрутки ---------- */
+/* ---------- Нижняя шторка: фон, Esc, блокировка прокрутки ----------
+   Рендерится через портал в #app-shell: если Sheet вызвать из компонента,
+   лежащего внутри прокручиваемого <main> (overflow-y-auto), браузер обрежет
+   абсолютно спозиционированную шторку до видимого фрагмента main — портал
+   выносит её DOM-узел на уровень Shell, где absolute inset-0 работает как
+   задумано, независимо от места вызова. */
 export function Sheet({
   open, onClose, title, children,
 }: {
@@ -46,6 +52,20 @@ export function Sheet({
   title: string;
   children: ReactNode;
 }) {
+  const [container] = useState(() => {
+    const el = document.createElement("div");
+    el.className = "contents";
+    return el;
+  });
+
+  useEffect(() => {
+    const root = document.getElementById("app-shell");
+    root?.appendChild(container);
+    return () => {
+      root?.removeChild(container);
+    };
+  }, [container]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -54,7 +74,7 @@ export function Sheet({
   }, [open, onClose]);
 
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="absolute inset-0 z-[70]">
       <button aria-label="Закрыть" className="animate-fade-in absolute inset-0 h-full w-full bg-ink/45" onClick={onClose} />
       <div className="animate-sheet-up absolute inset-x-0 bottom-0 max-h-[86%] overflow-hidden rounded-t-[26px] bg-white shadow-float">
@@ -67,7 +87,8 @@ export function Sheet({
         </div>
         <div className="no-scrollbar max-h-[68vh] overflow-y-auto px-5 pb-8">{children}</div>
       </div>
-    </div>
+    </div>,
+    container,
   );
 }
 

@@ -28,6 +28,71 @@ function loadCustom(): Record<string, CustomEvent[]> {
   }
 }
 
+type EventFormValue = { title: string; time: string; kind: EventKind };
+
+/* Форма добавления события — используется и в мини-ленте, и в полном календаре */
+function EventForm({
+  form, onChange, error, onCancel, onSubmit,
+}: {
+  form: EventFormValue;
+  onChange: (f: EventFormValue) => void;
+  error: boolean;
+  onCancel: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <div className="animate-fade-up mt-3 rounded-xl border border-accent/30 bg-accent-soft/40 p-3">
+      <p className="text-[12px] font-extrabold text-accent-deep">Новое событие</p>
+      <input
+        autoFocus
+        value={form.title}
+        onChange={(e) => onChange({ ...form, title: e.target.value })}
+        placeholder="Например: встреча с инвестором"
+        className={`mt-2 h-10 w-full rounded-xl border bg-white px-3 text-[13px] font-semibold outline-none transition-colors placeholder:font-medium placeholder:text-faint ${
+          error ? "border-danger ring-2 ring-danger/20" : "border-line focus:border-accent"
+        }`}
+      />
+      {error && <p className="mt-1 text-[11px] font-bold text-danger">Введите название события</p>}
+      <div className="mt-2.5 flex items-center gap-2">
+        <label className="flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-3">
+          <Icon name="clock" className="h-4 w-4 text-sub" strokeWidth={2} />
+          <input
+            type="time"
+            value={form.time}
+            onChange={(e) => onChange({ ...form, time: e.target.value })}
+            className="bg-transparent text-[13px] font-bold outline-none"
+          />
+        </label>
+        <div className="flex gap-1.5">
+          {(Object.keys(KIND_META) as EventKind[]).map((k) => (
+            <button
+              key={k}
+              onClick={() => onChange({ ...form, kind: k })}
+              className="press rounded-full px-2.5 py-1.5 text-[10.5px] font-extrabold transition-all"
+              style={
+                form.kind === k
+                  ? { background: KIND_META[k].dot, color: "#fff" }
+                  : { background: KIND_META[k].bg, color: KIND_META[k].fg }
+              }
+            >
+              {KIND_META[k].label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <button onClick={onCancel} className="press rounded-full bg-white px-4 py-2 text-[12px] font-extrabold text-sub">
+          Отмена
+        </button>
+        <button onClick={onSubmit} className="press inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-[12px] font-extrabold text-white">
+          <Icon name="check" className="h-3.5 w-3.5" strokeWidth={2.4} />
+          Добавить
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function CalendarStrip() {
   const today = useMemo(startOfToday, []);
   const days = useMemo(() => Array.from({ length: 9 }, (_, i) => addDays(today, i - 2)), [today]);
@@ -37,7 +102,7 @@ export default function CalendarStrip() {
   const [monthOpen, setMonthOpen] = useState(false);
   const [custom, setCustom] = useState<Record<string, CustomEvent[]>>(loadCustom);
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ title: "", time: "12:00", kind: "info" as EventKind });
+  const [form, setForm] = useState<EventFormValue>({ title: "", time: "12:00", kind: "info" });
   const [formError, setFormError] = useState(false);
   const toast = useToast();
 
@@ -67,6 +132,18 @@ export default function CalendarStrip() {
       : `${WEEKDAYS[selected.getDay()]}, ${selected.getDate()} ${MONTHS[selected.getMonth()]}`
     : "";
 
+  const addEvent = (key: string, ev: CustomEvent) => {
+    persist({ ...custom, [key]: sortByTime([...(custom[key] ?? []), ev]) });
+    toast("Событие добавлено в календарь", "check");
+  };
+
+  const removeEvent = (key: string, id: string) => {
+    const next = { ...custom, [key]: (custom[key] ?? []).filter((e) => e.id !== id) };
+    if (!next[key].length) delete next[key];
+    persist(next);
+    toast("Событие удалено", "close");
+  };
+
   const submitEvent = () => {
     if (!selected) return;
     if (!form.title.trim()) {
@@ -77,21 +154,15 @@ export default function CalendarStrip() {
       id: `${Date.now()}`, custom: true,
       time: form.time, title: form.title.trim(), kind: form.kind,
     };
-    const key = dayKey(selected);
-    persist({ ...custom, [key]: sortByTime([...(custom[key] ?? []), ev]) });
+    addEvent(dayKey(selected), ev);
     setForm({ title: "", time: "12:00", kind: "info" });
     setFormError(false);
     setAdding(false);
-    toast("Событие добавлено в календарь", "check");
   };
 
   const deleteEvent = (id: string) => {
     if (!selected) return;
-    const key = dayKey(selected);
-    const next = { ...custom, [key]: (custom[key] ?? []).filter((e) => e.id !== id) };
-    if (!next[key].length) delete next[key];
-    persist(next);
-    toast("Событие удалено", "close");
+    removeEvent(dayKey(selected), id);
   };
 
   return (
@@ -226,68 +297,20 @@ export default function CalendarStrip() {
 
               {/* Добавить событие */}
               {adding ? (
-                <div className="animate-fade-up mt-3 rounded-xl border border-accent/30 bg-accent-soft/40 p-3">
-                  <p className="text-[12px] font-extrabold text-accent-deep">Новое событие</p>
-                  <input
-                    autoFocus
-                    value={form.title}
-                    onChange={(e) => {
-                      setForm({ ...form, title: e.target.value });
-                      if (formError && e.target.value.trim()) setFormError(false);
-                    }}
-                    placeholder="Например: встреча с инвестором"
-                    className={`mt-2 h-10 w-full rounded-xl border bg-white px-3 text-[13px] font-semibold outline-none transition-colors placeholder:font-medium placeholder:text-faint ${
-                      formError ? "border-danger ring-2 ring-danger/20" : "border-line focus:border-accent"
-                    }`}
-                  />
-                  {formError && <p className="mt-1 text-[11px] font-bold text-danger">Введите название события</p>}
-                  <div className="mt-2.5 flex items-center gap-2">
-                    <label className="flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-3">
-                      <Icon name="clock" className="h-4 w-4 text-sub" strokeWidth={2} />
-                      <input
-                        type="time"
-                        value={form.time}
-                        onChange={(e) => setForm({ ...form, time: e.target.value })}
-                        className="bg-transparent text-[13px] font-bold outline-none"
-                      />
-                    </label>
-                    <div className="flex gap-1.5">
-                      {(Object.keys(KIND_META) as EventKind[]).map((k) => (
-                        <button
-                          key={k}
-                          onClick={() => setForm({ ...form, kind: k })}
-                          className="press rounded-full px-2.5 py-1.5 text-[10.5px] font-extrabold transition-all"
-                          style={
-                            form.kind === k
-                              ? { background: KIND_META[k].dot, color: "#fff" }
-                              : { background: KIND_META[k].bg, color: KIND_META[k].fg }
-                          }
-                        >
-                          {KIND_META[k].label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                    <button
-                      onClick={() => {
-                        setAdding(false);
-                        setFormError(false);
-                        setForm({ title: "", time: "12:00", kind: "info" });
-                      }}
-                      className="press rounded-full bg-white px-4 py-2 text-[12px] font-extrabold text-sub"
-                    >
-                      Отмена
-                    </button>
-                    <button
-                      onClick={submitEvent}
-                      className="press inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-[12px] font-extrabold text-white"
-                    >
-                      <Icon name="check" className="h-3.5 w-3.5" strokeWidth={2.4} />
-                      Добавить
-                    </button>
-                  </div>
-                </div>
+                <EventForm
+                  form={form}
+                  onChange={(f) => {
+                    setForm(f);
+                    if (formError && f.title.trim()) setFormError(false);
+                  }}
+                  error={formError}
+                  onCancel={() => {
+                    setAdding(false);
+                    setFormError(false);
+                    setForm({ title: "", time: "12:00", kind: "info" });
+                  }}
+                  onSubmit={submitEvent}
+                />
               ) : (
                 <button
                   onClick={() => setAdding(true)}
@@ -302,22 +325,51 @@ export default function CalendarStrip() {
         </div>
       </div>
 
-      <MonthSheet open={monthOpen} onClose={() => setMonthOpen(false)} custom={custom} />
+      <MonthSheet
+        open={monthOpen}
+        onClose={() => setMonthOpen(false)}
+        custom={custom}
+        onAddEvent={addEvent}
+        onDeleteEvent={removeEvent}
+      />
     </section>
   );
 }
 
 /* ---------- Полный месяц ---------- */
 function MonthSheet({
-  open, onClose, custom,
+  open, onClose, custom, onAddEvent, onDeleteEvent,
 }: {
   open: boolean;
   onClose: () => void;
   custom: Record<string, CustomEvent[]>;
+  onAddEvent: (key: string, ev: CustomEvent) => void;
+  onDeleteEvent: (key: string, id: string) => void;
 }) {
   const today = useMemo(startOfToday, []);
   const [view, setView] = useState(() => ({ y: today.getFullYear(), m: today.getMonth() }));
   const [sel, setSel] = useState<Date | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState<EventFormValue>({ title: "", time: "12:00", kind: "info" });
+  const [formError, setFormError] = useState(false);
+
+  const selectDay = (d: Date) => {
+    setSel(d);
+    setAdding(false);
+    setFormError(false);
+  };
+
+  const submitEvent = () => {
+    if (!sel) return;
+    if (!form.title.trim()) {
+      setFormError(true);
+      return;
+    }
+    onAddEvent(dayKey(sel), { id: `${Date.now()}`, custom: true, time: form.time, title: form.title.trim(), kind: form.kind });
+    setForm({ title: "", time: "12:00", kind: "info" });
+    setFormError(false);
+    setAdding(false);
+  };
 
   const monthEvents = useMemo(() => {
     const base = eventsForMonth(view.y, view.m);
@@ -371,7 +423,7 @@ function MonthSheet({
           return (
             <button
               key={i}
-              onClick={() => setSel(d)}
+              onClick={() => selectDay(d)}
               className={`press relative mx-auto grid h-10 w-10 place-items-center rounded-xl text-[13px] font-bold transition-colors ${
                 isSel ? "bg-accent text-white" : meta ? "" : "text-ink2 hover:bg-paper"
               } ${isToday && !isSel ? "border-2 border-ink" : ""}`}
@@ -399,11 +451,48 @@ function MonthSheet({
                 <li key={i} className="flex items-center gap-2.5 rounded-xl px-3 py-2.5" style={{ background: KIND_META[e.kind].bg }}>
                   <span className="text-[11.5px] font-extrabold" style={{ color: KIND_META[e.kind].fg }}>{e.time}</span>
                   <span className="min-w-0 flex-1 truncate text-[13px] font-bold">{e.title}</span>
-                  {"custom" in e && <span className="shrink-0 text-[9.5px] font-extrabold uppercase tracking-wide text-sub">личное</span>}
+                  {"custom" in e && (
+                    <>
+                      <span className="shrink-0 text-[9.5px] font-extrabold uppercase tracking-wide text-sub">личное</span>
+                      <button
+                        onClick={() => onDeleteEvent(dayKey(sel), e.id)}
+                        className="press grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/85 text-sub"
+                        aria-label="Удалить событие"
+                      >
+                        <Icon name="close" className="h-3 w-3" strokeWidth={2.4} />
+                      </button>
+                    </>
+                  )}
                   <span className="text-[10px] font-extrabold uppercase" style={{ color: KIND_META[e.kind].fg }}>{KIND_META[e.kind].label}</span>
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Добавить событие — доступно и если на дату уже есть события */}
+          {adding ? (
+            <EventForm
+              form={form}
+              onChange={(f) => {
+                setForm(f);
+                if (formError && f.title.trim()) setFormError(false);
+              }}
+              error={formError}
+              onCancel={() => {
+                setAdding(false);
+                setFormError(false);
+                setForm({ title: "", time: "12:00", kind: "info" });
+              }}
+              onSubmit={submitEvent}
+            />
+          ) : (
+            <button
+              onClick={() => setAdding(true)}
+              className="press mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-paper/60 py-2.5 text-[12px] font-extrabold text-accent transition-colors hover:border-accent/50 hover:bg-accent-soft/40"
+            >
+              <Icon name="plus" className="h-3.5 w-3.5" strokeWidth={2.4} />
+              Добавить событие
+            </button>
           )}
         </div>
       )}
