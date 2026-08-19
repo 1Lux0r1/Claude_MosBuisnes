@@ -121,7 +121,7 @@ export default function App() {
     >
       <div
         id="app-shell"
-        className="mx-auto flex h-full w-full max-w-[400px] flex-col bg-card text-ink shadow-[0_0_90px_-24px_rgba(14,18,32,0.35)] md:my-5 md:h-[calc(100%-40px)] md:max-w-[392px] md:rounded-[46px] md:border-[9px] md:border-ink-solid"
+        className="relative mx-auto flex h-full w-full max-w-[400px] flex-col overflow-hidden bg-card text-ink shadow-[0_0_90px_-24px_rgba(14,18,32,0.35)] md:my-5 md:h-[calc(100%-40px)] md:max-w-[392px] md:rounded-[46px] md:border-[9px] md:border-ink-solid"
       >
         <ToastProvider>
           <Shell
