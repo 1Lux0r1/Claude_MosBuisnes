@@ -196,6 +196,13 @@ const paths: Record<string, JSX.Element> = {
     </>
   ),
   moon: <path d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5a7 7 0 0 0 10.8 10.8Z" />,
+  candles: (
+    <>
+      <path d="M6 4v3.5M6 13.5V20M18 4v6.5M18 16.5V20" />
+      <rect x="3.3" y="7.5" width="5.4" height="6" rx="1" />
+      <rect x="15.3" y="10.5" width="5.4" height="6" rx="1" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof paths;
