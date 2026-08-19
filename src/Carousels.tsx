@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { ChartOverlay, Dots, Reveal, Sheet, useSnap, useToast } from "./ui";
 import {
-  BANKS, CURRENCIES, NEWS, loadConnectedBankIds,
+  BANKS, CURRENCIES, NEWS, NEWS_SECTION_META, loadConnectedBankIds,
   type BankInfo, type CurrencyItem, type NewsItem,
 } from "./data";
+import {
+  fmtFxDate, fmtFxPrice, getFxSeries, TIMEFRAMES, type OhlcPoint, type TimeframeId,
+} from "./fxHistory";
 
 const fmtFx = (v: number) => new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(v);
 
@@ -76,6 +79,195 @@ function PriceChart({
       <polyline points={line} fill="none" stroke={color} strokeWidth={big ? 2.2 : 2.1} strokeLinecap="round" strokeLinejoin="round" />
       <circle cx={lastX} cy={lastY} r={big ? 2.4 : 1.8} fill={color} stroke="#ffffff" strokeWidth={big ? 1.3 : 0.9} />
     </svg>
+  );
+}
+
+/* Увеличенный график с историей котировок (для ChartOverlay): выбор
+   таймфрейма от дня до всего периода с 1999 года, переключение
+   линия/свечи, ось цены и дат, «протяните по графику» — курсор,
+   показывающий цену на конкретную дату. */
+function HistoryChart({
+  code, endValue, up, chg,
+}: {
+  code: string;
+  endValue: number;
+  up: boolean;
+  chg: string;
+}) {
+  const [tf, setTf] = useState<TimeframeId>("1m");
+  const [chartType, setChartType] = useState<"line" | "candle">("line");
+  const [cursor, setCursor] = useState<number | null>(null);
+  const draggingRef = useRef(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  const points: OhlcPoint[] = useMemo(() => getFxSeries(code, endValue, tf), [code, endValue, tf]);
+
+  const min = Math.min(...points.map((p) => p.l));
+  const max = Math.max(...points.map((p) => p.h));
+  const span = max - min || 1;
+  const w = 300;
+  const h = 190;
+  const xFor = (i: number) => (points.length <= 1 ? w / 2 : (i / (points.length - 1)) * w);
+  const yFor = (v: number) => h - ((v - min) / span) * h;
+
+  const linePts = points.map((p, i) => [xFor(i), yFor(p.c)] as const);
+  const lineStr = linePts.map(([x, y]) => `${x},${y}`).join(" ");
+  const areaStr = `M${linePts[0][0]},${h} L${lineStr.split(" ").join(" L")} L${linePts[linePts.length - 1][0]},${h} Z`;
+  const color = up ? "#148a4c" : "#f5333f";
+  const gradId = `hc-${code}`;
+  const barW = Math.max(1.4, (w / points.length) * 0.62);
+
+  const updateCursor = (clientX: number) => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    setCursor(Math.round(ratio * (points.length - 1)));
+  };
+  const onDown = (e: React.PointerEvent) => {
+    draggingRef.current = true;
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    updateCursor(e.clientX);
+  };
+  const onMove = (e: React.PointerEvent) => {
+    if (!draggingRef.current) return;
+    updateCursor(e.clientX);
+  };
+  const endDrag = () => {
+    draggingRef.current = false;
+    setCursor(null);
+  };
+
+  const active = cursor != null ? points[cursor] : null;
+  const displayValue = active ? active.c : endValue;
+  const displayDate = active ? fmtFxDate(active.t, tf, true) : "Сегодня";
+  const midIdx = Math.floor((points.length - 1) / 2);
+
+  return (
+    <div className="w-full">
+      <div className="flex items-start justify-between px-1">
+        <div>
+          <p className="text-[24px] font-extrabold leading-none tracking-tight tabular-nums">
+            {fmtFxPrice(displayValue)} <span className="text-[13px] font-bold text-sub">₽</span>
+          </p>
+          <p className="mt-1.5 text-[11px] font-bold text-faint">{displayDate}</p>
+        </div>
+        {!active && (
+          <span
+            className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-extrabold ${
+              up ? "bg-ok-soft text-ok" : "bg-danger-soft text-danger"
+            }`}
+          >
+            <Icon name={up ? "trend-up" : "trend-down"} className="h-3.5 w-3.5" strokeWidth={2.2} />
+            {chg}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3 flex items-center gap-1.5">
+        {TIMEFRAMES.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => { setTf(t.id); setCursor(null); }}
+            className={`press flex-1 rounded-full py-1.5 text-[11px] font-extrabold transition-colors ${
+              tf === t.id ? "bg-ink text-on-ink" : "bg-paper text-sub"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-2.5 flex items-center justify-end gap-1.5">
+        <button
+          onClick={() => setChartType("line")}
+          aria-label="Линия"
+          className={`press grid h-7 w-7 place-items-center rounded-full transition-colors ${
+            chartType === "line" ? "bg-accent-soft text-accent" : "bg-paper text-faint"
+          }`}
+        >
+          <Icon name="chart" className="h-4 w-4" strokeWidth={2} />
+        </button>
+        <button
+          onClick={() => setChartType("candle")}
+          aria-label="Свечи"
+          className={`press grid h-7 w-7 place-items-center rounded-full transition-colors ${
+            chartType === "candle" ? "bg-accent-soft text-accent" : "bg-paper text-faint"
+          }`}
+        >
+          <Icon name="candles" className="h-4 w-4" strokeWidth={2} />
+        </button>
+      </div>
+
+      <div className="relative mt-2">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex w-12 flex-col justify-between py-0.5 text-right text-[9px] font-bold text-faint">
+          <span>{fmtFxPrice(max)}</span>
+          <span>{fmtFxPrice((max + min) / 2)}</span>
+          <span>{fmtFxPrice(min)}</span>
+        </div>
+        <div
+          ref={wrapRef}
+          className="h-48 touch-none pr-12"
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onPointerLeave={() => { if (draggingRef.current) endDrag(); }}
+        >
+          <svg viewBox={`0 0 ${w} ${h}`} className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor={color} stopOpacity="0.28" />
+                <stop offset="1" stopColor={color} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {[0, 0.5, 1].map((f) => (
+              <line key={f} x1="0" x2={w} y1={h * f} y2={h * f} stroke="var(--color-line)" strokeWidth="1" strokeDasharray="3 4" />
+            ))}
+
+            {chartType === "line" ? (
+              <>
+                <path d={areaStr} fill={`url(#${gradId})`} />
+                <polyline points={lineStr} fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              </>
+            ) : (
+              points.map((p, i) => {
+                const x = xFor(i);
+                const bull = p.c >= p.o;
+                const bodyTop = yFor(Math.max(p.o, p.c));
+                const bodyBottom = yFor(Math.min(p.o, p.c));
+                const bodyH = Math.max(1, bodyBottom - bodyTop);
+                const barColor = bull ? "#148a4c" : "#f5333f";
+                return (
+                  <g key={i}>
+                    <line x1={x} x2={x} y1={yFor(p.h)} y2={yFor(p.l)} stroke={barColor} strokeWidth="1" />
+                    <rect x={x - barW / 2} y={bodyTop} width={barW} height={bodyH} fill={barColor} rx="0.6" />
+                  </g>
+                );
+              })
+            )}
+
+            {active && cursor != null && (
+              <>
+                <line x1={xFor(cursor)} x2={xFor(cursor)} y1="0" y2={h} stroke="var(--color-ink2)" strokeWidth="1" strokeDasharray="3 3" />
+                <circle cx={xFor(cursor)} cy={yFor(active.c)} r="3.2" fill={color} stroke="#fff" strokeWidth="1.4" />
+              </>
+            )}
+          </svg>
+        </div>
+      </div>
+
+      <div className="mt-1.5 flex justify-between pr-12 text-[9.5px] font-bold text-faint">
+        <span>{fmtFxDate(points[0].t, tf)}</span>
+        <span>{fmtFxDate(points[midIdx].t, tf)}</span>
+        <span>{fmtFxDate(points[points.length - 1].t, tf)}</span>
+      </div>
+
+      <p className="mt-3 flex items-center justify-center gap-1 text-[10px] font-semibold text-faint">
+        <Icon name="eye" className="h-3 w-3" strokeWidth={2.2} />
+        Проведите по графику, чтобы посмотреть цену на дату
+      </p>
+    </div>
   );
 }
 
@@ -248,32 +440,15 @@ function CurrencyDetailSheet({
       </Sheet>
 
       <ChartOverlay open={chartOpen} onClose={() => setChartOpen(false)} title={`${c.code} · ${c.country}`}>
-        <div className="w-full py-4">
-          <div className="flex items-center justify-between px-1">
-            <p className="text-[24px] font-extrabold leading-none tracking-tight">
-              {c.rate} <span className="text-[13px] font-bold text-sub">₽</span>
-            </p>
-            <span
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-extrabold ${
-                c.up ? "bg-ok-soft text-ok" : "bg-danger-soft text-danger"
-              }`}
-            >
-              <Icon name={c.up ? "trend-up" : "trend-down"} className="h-3.5 w-3.5" strokeWidth={2.2} />
-              {c.chg}
-            </span>
-          </div>
-          <div className="mt-4 h-64 w-full">
-            <PriceChart code={`${c.code}-big`} data={c.spark} up={c.up} big />
-          </div>
-        </div>
+        <HistoryChart code={c.code} endValue={parseFloat(c.rate.replace(",", "."))} up={c.up} chg={c.chg} />
       </ChartOverlay>
     </>
   );
 }
 
-/* ---------- Новостная лента ---------- */
-const NEWS_ICON: Record<NewsItem["category"], string> = { mandatory: "alert", personal: "user", edu: "cap" };
-const NEWS_LABEL: Record<NewsItem["category"], string> = { mandatory: "Обязательно", personal: "Персонально", edu: "Обучение" };
+/* ---------- Новостная лента: на главном экране — только самые релевантные
+   новости, полный список по всем направлениям — на экране «Все новости» ---------- */
+const HOME_NEWS = [...NEWS].sort((a, b) => b.relevance - a.relevance).slice(0, 6);
 
 export function NewsCarousel({
   onRead, onAllNews,
@@ -281,7 +456,7 @@ export function NewsCarousel({
   onRead: (n: NewsItem) => void;
   onAllNews: () => void;
 }) {
-  const { ref, index, onScroll, goTo } = useSnap(NEWS.length);
+  const { ref, index, onScroll, goTo } = useSnap(HOME_NEWS.length);
   return (
     <Reveal>
       <section>
@@ -290,7 +465,7 @@ export function NewsCarousel({
           <button onClick={onAllNews} className="press text-[12.5px] font-bold text-accent">Все новости</button>
         </div>
         <div ref={ref} onScroll={onScroll} data-hscroll className="no-scrollbar mt-3 flex snap-x snap-mandatory overflow-x-auto pl-4">
-          {NEWS.map((n) => (
+          {HOME_NEWS.map((n) => (
             <div key={n.id} className="w-[272px] shrink-0 snap-start pr-3">
               <article
                 className={`flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-card transition-shadow hover:shadow-float ${
@@ -308,8 +483,8 @@ export function NewsCarousel({
                   />
                   <div className="relative flex items-center justify-between p-3">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2 py-1 text-[10px] font-extrabold text-ink-solid backdrop-blur-sm">
-                      <Icon name={NEWS_ICON[n.category] as never} className="h-3 w-3" strokeWidth={2.2} />
-                      {NEWS_LABEL[n.category]}
+                      <Icon name={NEWS_SECTION_META[n.section].icon} className="h-3 w-3" strokeWidth={2.2} />
+                      {NEWS_SECTION_META[n.section].label}
                     </span>
                     {n.important && (
                       <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-danger" title="Важная новость">
@@ -336,7 +511,7 @@ export function NewsCarousel({
             </div>
           ))}
         </div>
-        <Dots count={NEWS.length} active={index} onPick={goTo} />
+        <Dots count={HOME_NEWS.length} active={index} onPick={goTo} />
       </section>
     </Reveal>
   );

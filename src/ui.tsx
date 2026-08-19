@@ -126,7 +126,7 @@ export function ChartOverlay({
             <Icon name="close" className="h-4 w-4" strokeWidth={2.2} />
           </button>
         </div>
-        <div className="flex min-h-0 flex-1 items-center px-3">{children}</div>
+        <div className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">{children}</div>
       </div>
     </div>,
     container,

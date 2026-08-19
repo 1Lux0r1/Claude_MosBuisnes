@@ -196,6 +196,22 @@ const paths: Record<string, JSX.Element> = {
     </>
   ),
   moon: <path d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5a7 7 0 0 0 10.8 10.8Z" />,
+  candles: (
+    <>
+      <path d="M6 4v3.5M6 13.5V20M18 4v6.5M18 16.5V20" />
+      <rect x="3.3" y="7.5" width="5.4" height="6" rx="1" />
+      <rect x="15.3" y="10.5" width="5.4" height="6" rx="1" />
+    </>
+  ),
+  truck: (
+    <>
+      <path d="M2.5 6.5h10.5v9.5h-10.5Z" />
+      <path d="M13 10h3.2L19.5 13v3h-6.5" />
+      <circle cx="6.8" cy="18" r="1.8" />
+      <circle cx="16.3" cy="18" r="1.8" />
+      <path d="M2.5 15.5h1.7M18.1 15.5h1.4" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof paths;
