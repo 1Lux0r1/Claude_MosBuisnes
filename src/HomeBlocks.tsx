@@ -1,0 +1,131 @@
+import { Icon, type IconName } from "./icons";
+import { Dots, Reveal, useSnap } from "./ui";
+import { PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS, type Partner, type QuickAction, type ServiceSection } from "./data";
+
+/* ---------- Быстрые действия: сетка 2×3 ---------- */
+export function QuickActions({ onPick }: { onPick: (a: QuickAction) => void }) {
+  return (
+    <Reveal>
+      <section className="px-4">
+        <h2 className="font-display text-[15px] font-semibold tracking-tight">Быстрые действия</h2>
+        <div className="mt-3 grid grid-cols-3 gap-2.5">
+          {QUICK_ACTIONS.map((a, i) => (
+            <Reveal key={a.id} delay={i * 45}>
+              <button
+                onClick={() => onPick(a)}
+                className="press relative flex h-full w-full flex-col items-start rounded-2xl border border-line/80 bg-white p-3 text-left shadow-card transition-shadow hover:shadow-float"
+              >
+                {a.badge && (
+                  <span className="absolute -right-1.5 -top-1.5 grid h-[19px] min-w-[19px] place-items-center rounded-full border-2 border-white bg-danger px-1 text-[10px] font-extrabold leading-none text-white">
+                    {a.badge}
+                  </span>
+                )}
+                <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2" style={{ background: a.tint }}>
+                  <Icon name={a.icon as IconName} className="h-[19px] w-[19px]" />
+                </span>
+                <span className="mt-2 text-[12px] font-extrabold leading-[1.2] tracking-tight">{a.title}</span>
+                <span className="mt-0.5 line-clamp-1 text-[10.5px] font-medium leading-snug text-sub">{a.desc}</span>
+              </button>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+    </Reveal>
+  );
+}
+
+/* ---------- Услуги и меры поддержки ---------- */
+export function ServiceSections({ onPick }: { onPick: (s: ServiceSection) => void }) {
+  return (
+    <Reveal>
+      <section className="px-4">
+        <h2 className="font-display text-[15px] font-semibold leading-snug tracking-tight">
+          Услуги и меры<br />поддержки для бизнеса
+        </h2>
+        <div className="mt-3 space-y-2.5">
+          {SERVICE_SECTIONS.map((s, i) => (
+            <Reveal key={s.id} delay={i * 60}>
+              <button
+                onClick={() => onPick(s)}
+                className="press group flex w-full items-center gap-3.5 rounded-2xl border border-line/80 bg-white p-3.5 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
+              >
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-ink2 transition-transform duration-300 group-hover:scale-105" style={{ background: s.tint }}>
+                  <Icon name={s.icon as IconName} className="h-6 w-6" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-extrabold tracking-tight">{s.title}</span>
+                  <span className="mt-0.5 block truncate text-[12px] font-medium text-sub">{s.desc}</span>
+                </span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-paper text-sub transition-all duration-300 group-hover:bg-accent group-hover:text-white">
+                  <Icon name="arrow-right" className="h-4 w-4" strokeWidth={2.1} />
+                </span>
+              </button>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+    </Reveal>
+  );
+}
+
+/* ---------- Предложения партнёров ---------- */
+export function PartnersBlock({
+  onPick, onAllServices,
+}: {
+  onPick: (p: Partner) => void;
+  onAllServices: () => void;
+}) {
+  const { ref, index, onScroll, goTo } = useSnap(PARTNER_PAGES.length);
+
+  return (
+    <Reveal>
+      <section>
+        <div className="flex items-center justify-between px-4">
+          <h2 className="font-display text-[15px] font-semibold tracking-tight">Предложения партнёров</h2>
+          <button onClick={onAllServices} className="press shrink-0 text-[12.5px] font-bold text-accent">
+            Все услуги для бизнеса
+          </button>
+        </div>
+
+        <div ref={ref} onScroll={onScroll} data-hscroll className="no-scrollbar mt-3 flex snap-x snap-mandatory overflow-x-auto">
+          {PARTNER_PAGES.map((page) => (
+            <div key={page.label} className="w-full shrink-0 snap-center px-4">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-faint">{page.label}</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {page.items.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => onPick(p)}
+                    className="press flex flex-col items-start rounded-2xl border border-line/80 bg-white p-3 text-left shadow-card transition-shadow hover:shadow-float"
+                  >
+                    <span className="flex w-full items-center justify-between">
+                      <span
+                        className="grid h-9 w-9 place-items-center rounded-xl text-[10.5px] font-extrabold tracking-tight"
+                        style={{ background: p.logoBg, color: p.logoFg }}
+                      >
+                        {p.logo}
+                      </span>
+                      {p.city && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-[3px] text-[8.5px] font-extrabold uppercase tracking-wide text-white">
+                          <Icon name="star" className="h-2.5 w-2.5 fill-[#ffc531] text-[#ffc531]" strokeWidth={1} />
+                          Партнёр Москвы
+                        </span>
+                      )}
+                    </span>
+                    <span className="mt-2.5 line-clamp-1 text-[12.5px] font-extrabold tracking-tight">{p.name}</span>
+                    <span className="mt-0.5 line-clamp-2 min-h-[28px] text-[11px] font-medium leading-snug text-sub">{p.desc}</span>
+                    <span className="mt-2 inline-flex items-center gap-1 rounded-lg bg-ok-soft px-2 py-1 text-[10.5px] font-extrabold text-ok">
+                      <Icon name="spark" className="h-3 w-3" strokeWidth={2.2} />
+                      {p.offer}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <Dots count={PARTNER_PAGES.length} active={index} onPick={goTo} />
+      </section>
+    </Reveal>
+  );
+}
