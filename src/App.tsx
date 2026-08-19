@@ -4,7 +4,10 @@ import BottomNav from "./BottomNav";
 import AIAssistant from "./AIAssistant";
 import CalendarStrip from "./CalendarStrip";
 import { CurrencyCarousel, NewsCarousel } from "./Carousels";
-import { PartnersBlock, QuickActions, ServiceSections } from "./HomeBlocks";
+import {
+  MAX_QUICK_ACTIONS, MIN_QUICK_ACTIONS, PartnersBlock, QUICK_ACTIONS_KEY, QuickActions, QuickActionsPicker,
+  ServiceSections, loadEnabledQuickActionIds,
+} from "./HomeBlocks";
 import { EventsScreen, OfflineError, ServicesScreen } from "./screens";
 import ProfileService from "./microservices/ProfileService";
 import SettingsService from "./microservices/SettingsService";
@@ -183,12 +186,29 @@ function Shell(props: {
 
   const toast = useToast();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [quickActionIds, setQuickActionIds] = useState<string[]>(loadEnabledQuickActionIds);
+  const [quickActionsPickerOpen, setQuickActionsPickerOpen] = useState(false);
   const eventsBadge = useMemo(() => Math.max(0, 3 - registered.size), [registered]);
 
   const handleLogout = () => {
     setSettingsOpen(false);
     toast("Вы вышли из аккаунта (демо)", "logout");
     onGoTab(0);
+  };
+
+  const toggleQuickAction = (id: string) => {
+    const isOn = quickActionIds.includes(id);
+    if (isOn && quickActionIds.length <= MIN_QUICK_ACTIONS) {
+      toast(`Минимум ${MIN_QUICK_ACTIONS} действия на панели`, "alert");
+      return;
+    }
+    if (!isOn && quickActionIds.length >= MAX_QUICK_ACTIONS) {
+      toast(`Максимум ${MAX_QUICK_ACTIONS} действий на панели`, "alert");
+      return;
+    }
+    const next = isOn ? quickActionIds.filter((x) => x !== id) : [...quickActionIds, id];
+    setQuickActionIds(next);
+    localStorage.setItem(QUICK_ACTIONS_KEY, JSON.stringify(next));
   };
 
   return (
@@ -221,6 +241,8 @@ function Shell(props: {
               ) : (
                 <HomeScreen
                   onQuickAction={(a) => setSheet({ kind: "action", data: a })}
+                  quickActionIds={quickActionIds}
+                  onOpenQuickActionsPicker={() => setQuickActionsPickerOpen(true)}
                   onSection={(s) => {
                     setServicesCategory(s.category);
                     onGoTab(1);
@@ -261,6 +283,12 @@ function Shell(props: {
 
       <AIAssistant open={aiOpen} onClose={() => setAiOpen(false)} />
       <SettingsService open={settingsOpen} onClose={() => setSettingsOpen(false)} offline={offline} onOffline={setOffline} />
+      <QuickActionsPicker
+        open={quickActionsPickerOpen}
+        onClose={() => setQuickActionsPickerOpen(false)}
+        enabled={quickActionIds}
+        onToggle={toggleQuickAction}
+      />
       <ActionSheetView sheet={sheet} onClose={() => setSheet(null)} onNavigate={setSheet} />
     </div>
   );
@@ -268,9 +296,11 @@ function Shell(props: {
 
 /* ---------- Главный экран ---------- */
 function HomeScreen({
-  onQuickAction, onSection, onPartner, onAllServices, onNews, onAllNews,
+  onQuickAction, quickActionIds, onOpenQuickActionsPicker, onSection, onPartner, onAllServices, onNews, onAllNews,
 }: {
   onQuickAction: (a: QuickAction) => void;
+  quickActionIds: string[];
+  onOpenQuickActionsPicker: () => void;
   onSection: (s: ServiceSection) => void;
   onPartner: (p: Partner) => void;
   onAllServices: () => void;
@@ -280,7 +310,7 @@ function HomeScreen({
   return (
     <div className="space-y-7 pt-4 pb-8">
       <CalendarStrip />
-      <QuickActions onPick={onQuickAction} />
+      <QuickActions onPick={onQuickAction} enabled={quickActionIds} onOpenPicker={onOpenQuickActionsPicker} />
       <ServiceSections onPick={onSection} />
       <PartnersBlock onPick={onPartner} onAllServices={onAllServices} />
       <CurrencyCarousel />
