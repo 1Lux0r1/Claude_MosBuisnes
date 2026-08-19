@@ -287,7 +287,7 @@ function HomeScreen({
       <NewsCarousel onRead={onNews} onAllNews={onAllNews} />
       <Reveal>
         <p className="px-4 text-center text-[10.5px] font-bold text-faint">
-          Центр поддержки бизнеса · Москва, 2026
+          МосБизнес · Москва, 2026
         </p>
       </Reveal>
     </div>
@@ -309,7 +309,7 @@ function ActionSheetView({
   if (sheet.kind === "newslist") {
     return (
       <Sheet open onClose={onClose} title="Все новости">
-        <p className="text-[12px] font-semibold text-sub">Лента ЦЭВБ · обновлено сегодня</p>
+        <p className="text-[12px] font-semibold text-sub">Лента МосБизнес · обновлено сегодня</p>
         <div className="mt-3 space-y-2">
           {NEWS.map((n) => (
             <button

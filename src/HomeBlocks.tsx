@@ -1,36 +1,160 @@
+import { useState } from "react";
 import { Icon, type IconName } from "./icons";
-import { Dots, Reveal, useSnap } from "./ui";
-import { PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS, type Partner, type QuickAction, type ServiceSection } from "./data";
+import { Dots, Reveal, Sheet, useSnap, useToast } from "./ui";
+import {
+  DEFAULT_QUICK_ACTION_IDS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS,
+  type Partner, type QuickAction, type ServiceSection,
+} from "./data";
 
-/* ---------- Быстрые действия: сетка 2×3 ---------- */
+const QUICK_ACTIONS_KEY = "mb-quick-actions";
+const MIN_QUICK_ACTIONS = 3;
+const MAX_QUICK_ACTIONS = 6;
+
+function loadEnabledIds(): string[] {
+  try {
+    const raw = localStorage.getItem(QUICK_ACTIONS_KEY);
+    const ids: unknown = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(ids) && ids.every((x) => typeof x === "string")) return ids;
+  } catch {
+    /* игнорируем повреждённые данные — вернём набор по умолчанию */
+  }
+  return DEFAULT_QUICK_ACTION_IDS;
+}
+
+/* Делим плитки на строки без «хвоста»: при 4–5 действиях последняя строка
+   не должна оставлять пустые ячейки, при 3 — плитки не растягиваются на два ряда. */
+function chunkIntoRows<T>(items: T[]): T[][] {
+  if (items.length <= 3) return items.length ? [items] : [];
+  const firstRow = Math.ceil(items.length / 2);
+  return [items.slice(0, firstRow), items.slice(firstRow)];
+}
+
+/* ---------- Быстрые действия: настраиваемая панель ---------- */
 export function QuickActions({ onPick }: { onPick: (a: QuickAction) => void }) {
+  const toast = useToast();
+  const [enabled, setEnabled] = useState<string[]>(loadEnabledIds);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const persist = (ids: string[]) => {
+    setEnabled(ids);
+    localStorage.setItem(QUICK_ACTIONS_KEY, JSON.stringify(ids));
+  };
+
+  const toggle = (id: string) => {
+    if (enabled.includes(id)) {
+      if (enabled.length <= MIN_QUICK_ACTIONS) {
+        toast(`Минимум ${MIN_QUICK_ACTIONS} действия на панели`, "alert");
+        return;
+      }
+      persist(enabled.filter((x) => x !== id));
+    } else {
+      if (enabled.length >= MAX_QUICK_ACTIONS) {
+        toast(`Максимум ${MAX_QUICK_ACTIONS} действий на панели`, "alert");
+        return;
+      }
+      persist([...enabled, id]);
+    }
+  };
+
+  const visible = QUICK_ACTIONS.filter((a) => enabled.includes(a.id));
+  const rows = chunkIntoRows(visible);
+
   return (
     <Reveal>
       <section className="px-4">
-        <h2 className="font-display text-[15px] font-semibold tracking-tight">Быстрые действия</h2>
-        <div className="mt-3 grid grid-cols-3 gap-2.5">
-          {QUICK_ACTIONS.map((a, i) => (
-            <Reveal key={a.id} delay={i * 45}>
-              <button
-                onClick={() => onPick(a)}
-                className="press relative flex h-full w-full flex-col items-start rounded-2xl border border-line/80 bg-white p-3 text-left shadow-card transition-shadow hover:shadow-float"
-              >
-                {a.badge && (
-                  <span className="absolute -right-1.5 -top-1.5 grid h-[19px] min-w-[19px] place-items-center rounded-full border-2 border-white bg-danger px-1 text-[10px] font-extrabold leading-none text-white">
-                    {a.badge}
-                  </span>
-                )}
-                <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2" style={{ background: a.tint }}>
-                  <Icon name={a.icon as IconName} className="h-[19px] w-[19px]" />
-                </span>
-                <span className="mt-2 text-[12px] font-extrabold leading-[1.2] tracking-tight">{a.title}</span>
-                <span className="mt-0.5 line-clamp-1 text-[10.5px] font-medium leading-snug text-sub">{a.desc}</span>
-              </button>
-            </Reveal>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-[15px] font-semibold tracking-tight">Быстрые действия</h2>
+          <button
+            onClick={() => setPickerOpen(true)}
+            className="press inline-flex items-center gap-1.5 rounded-full py-1.5 pr-1 text-[12.5px] font-bold text-accent"
+          >
+            Настроить
+            <Icon name="settings" className="h-3.5 w-3.5" strokeWidth={2.2} />
+          </button>
+        </div>
+        <div className="mt-3 space-y-2.5">
+          {rows.map((row, ri) => (
+            <div key={ri} className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` }}>
+              {row.map((a, i) => (
+                <Reveal key={a.id} delay={(ri * 3 + i) * 45}>
+                  <button
+                    onClick={() => onPick(a)}
+                    className="press relative flex h-full w-full flex-col items-start rounded-2xl border border-line/80 bg-white p-3 text-left shadow-card transition-shadow hover:shadow-float"
+                  >
+                    {a.badge && (
+                      <span className="absolute -right-1.5 -top-1.5 grid h-[19px] min-w-[19px] place-items-center rounded-full border-2 border-white bg-danger px-1 text-[10px] font-extrabold leading-none text-white">
+                        {a.badge}
+                      </span>
+                    )}
+                    <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2" style={{ background: a.tint }}>
+                      <Icon name={a.icon as IconName} className="h-[19px] w-[19px]" />
+                    </span>
+                    <span className="mt-2 text-[12px] font-extrabold leading-[1.2] tracking-tight">{a.title}</span>
+                    <span className="mt-0.5 line-clamp-1 text-[10.5px] font-medium leading-snug text-sub">{a.desc}</span>
+                  </button>
+                </Reveal>
+              ))}
+            </div>
           ))}
         </div>
       </section>
+
+      <QuickActionsPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        enabled={enabled}
+        onToggle={toggle}
+      />
     </Reveal>
+  );
+}
+
+/* ---------- Шторка выбора действий для панели ---------- */
+function QuickActionsPicker({
+  open, onClose, enabled, onToggle,
+}: {
+  open: boolean;
+  onClose: () => void;
+  enabled: string[];
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <Sheet open={open} onClose={onClose} title="Быстрые действия">
+      <p className="text-[12.5px] font-semibold text-sub">
+        Выбрано {enabled.length} из {MAX_QUICK_ACTIONS} · минимум {MIN_QUICK_ACTIONS}
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-2.5">
+        {QUICK_ACTIONS.map((a) => {
+          const isOn = enabled.includes(a.id);
+          const locked = (isOn && enabled.length <= MIN_QUICK_ACTIONS) || (!isOn && enabled.length >= MAX_QUICK_ACTIONS);
+          return (
+            <button
+              key={a.id}
+              onClick={() => onToggle(a.id)}
+              className={`press relative flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-all duration-200 ${
+                isOn ? "border-accent bg-accent-soft" : "border-line/80 bg-white"
+              } ${locked && !isOn ? "opacity-40" : ""}`}
+            >
+              {isOn && (
+                <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-accent text-white">
+                  <Icon name="check" className="h-3 w-3" strokeWidth={3} />
+                </span>
+              )}
+              <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2" style={{ background: a.tint }}>
+                <Icon name={a.icon as IconName} className="h-[18px] w-[18px]" />
+              </span>
+              <span className="text-[11px] font-bold leading-tight">{a.title}</span>
+            </button>
+          );
+        })}
+      </div>
+      <button
+        onClick={onClose}
+        className="press mt-4 w-full rounded-full bg-ink py-3 text-[13px] font-extrabold text-white"
+      >
+        Готово
+      </button>
+    </Sheet>
   );
 }
 

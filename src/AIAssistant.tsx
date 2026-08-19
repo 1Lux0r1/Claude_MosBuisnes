@@ -6,7 +6,7 @@ interface Msg { role: "ai" | "user"; text: string }
 
 const GREETING: Msg = {
   role: "ai",
-  text: "Здравствуйте, Анна! Я ИИ-агент экосистемы ЦЭВБ. Вижу 3 задачи на ближайшие дни: оплата патента, отчёт по субсидии и декларация НДС. Чем помочь?",
+  text: "Здравствуйте, Анна! Я ИИ-агент экосистемы МосБизнес. Вижу 3 задачи на ближайшие дни: оплата патента, отчёт по субсидии и декларация НДС. Чем помочь?",
 };
 
 /* Отдельный экран диалога с ассистентом (открывается кнопкой над меню) */
@@ -62,7 +62,7 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
             <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#22c55e]" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-display text-[14.5px] font-semibold tracking-tight">ИИ-агент ЦЭВБ</p>
+            <p className="font-display text-[14.5px] font-semibold tracking-tight">ИИ-агент МосБизнес</p>
             <p className="text-[11px] font-semibold text-ok">онлайн · отвечает за секунды</p>
           </div>
           <span className="hidden rounded-full bg-paper px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-sub sm:block">
