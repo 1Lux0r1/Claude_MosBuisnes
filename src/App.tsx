@@ -370,15 +370,25 @@ function ActionSheetView({
     const n = sheet.data;
     return (
       <Sheet open onClose={onClose} title="Новость">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-extrabold ${
-            n.important ? "bg-danger-soft text-danger" : "bg-paper text-sub"
-          }`}
+        <div
+          className="relative -mx-5 mb-3.5 flex h-24 items-end overflow-hidden px-5 pb-3"
+          style={{ background: `linear-gradient(135deg, ${n.artFrom}, ${n.artTo})` }}
         >
-          {n.important && <Icon name="excl" className="h-3 w-3" strokeWidth={2.4} />}
-          {n.category === "mandatory" ? "Обязательная" : n.category === "personal" ? "Персональная" : "Образовательная"}
-        </span>
-        <h4 className="mt-2.5 text-[16px] font-extrabold leading-snug tracking-tight">{n.title}</h4>
+          <Icon
+            name={n.artIcon}
+            className="pointer-events-none absolute -bottom-5 -right-5 h-28 w-28 text-white opacity-[0.2]"
+            strokeWidth={1.3}
+          />
+          <span
+            className={`relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-extrabold backdrop-blur-sm ${
+              n.important ? "bg-white text-danger" : "bg-white/90 text-ink"
+            }`}
+          >
+            {n.important && <Icon name="excl" className="h-3 w-3" strokeWidth={2.4} />}
+            {n.category === "mandatory" ? "Обязательная" : n.category === "personal" ? "Персональная" : "Образовательная"}
+          </span>
+        </div>
+        <h4 className="text-[16px] font-extrabold leading-snug tracking-tight">{n.title}</h4>
         <p className="mt-1 text-[11px] font-bold text-faint">{n.date} · Центр предпринимательства Москвы</p>
         <p className="mt-3 text-[13.5px] font-medium leading-relaxed text-ink2">{n.text}</p>
         <div className="mt-4 flex gap-2">
