@@ -203,6 +203,15 @@ const paths: Record<string, JSX.Element> = {
       <rect x="15.3" y="10.5" width="5.4" height="6" rx="1" />
     </>
   ),
+  truck: (
+    <>
+      <path d="M2.5 6.5h10.5v9.5h-10.5Z" />
+      <path d="M13 10h3.2L19.5 13v3h-6.5" />
+      <circle cx="6.8" cy="18" r="1.8" />
+      <circle cx="16.3" cy="18" r="1.8" />
+      <path d="M2.5 15.5h1.7M18.1 15.5h1.4" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof paths;

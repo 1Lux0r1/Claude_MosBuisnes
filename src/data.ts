@@ -195,6 +195,7 @@ export const SERVICE_SECTIONS: ServiceSection[] = [
   { id: "support", title: "Меры поддержки", desc: "Субсидии, гранты, льготы", icon: "coins", tint: "#e3f6ec", category: "Поддержка" },
   { id: "realty", title: "Недвижимость", desc: "Аренда, выкуп, торги", icon: "building", tint: "#ece9ff", category: "Недвижимость" },
   { id: "analytics", title: "Аналитика", desc: "Статистика, отчеты, данные", icon: "chart", tint: "#fff3d4", category: "Аналитика" },
+  { id: "logistics", title: "Логистика", desc: "Доставка, склад, грузоперевозки", icon: "truck", tint: "#ffe4cc", category: "Логистика" },
 ];
 
 export const SERVICE_CATALOG: { id: string; title: string; desc: string; category: string; term: string; icon: string }[] = [
@@ -206,6 +207,12 @@ export const SERVICE_CATALOG: { id: string; title: string; desc: string; categor
   { id: "s6", title: "Выкуп арендуемого имущества", desc: "Преимущественное право МСП", category: "Недвижимость", term: "45 дней", icon: "pin" },
   { id: "s7", title: "Отчёт по форме МСП", desc: "Автоматическая выгрузка", category: "Аналитика", term: "мгновенно", icon: "chart" },
   { id: "s8", title: "Данные по отраслям", desc: "API и витрины данных", category: "Аналитика", term: "мгновенно", icon: "chart" },
+  { id: "s9", title: "Курьерская доставка по Москве", desc: "Партнёрские тарифы, забор в день заказа", category: "Логистика", term: "от 1 дня", icon: "truck" },
+  { id: "s10", title: "Складское хранение (фулфилмент)", desc: "Аренда складских мест под товар", category: "Логистика", term: "от 500 ₽/м²/мес", icon: "building" },
+  { id: "s11", title: "Логистика для маркетплейсов", desc: "Доставка на склады Ozon, Wildberries, Я.Маркет", category: "Логистика", term: "от 1 дня", icon: "grid" },
+  { id: "s12", title: "Грузоперевозки по России", desc: "Автомобильные и ж/д перевозки между городами", category: "Логистика", term: "по расписанию", icon: "truck" },
+  { id: "s13", title: "Импорт и растаможка грузов", desc: "Оформление на таможне под ключ", category: "Логистика", term: "5-14 дней", icon: "shield" },
+  { id: "s14", title: "Экспресс-доставка «последняя миля»", desc: "До клиента в день заказа", category: "Логистика", term: "2-4 часа", icon: "send" },
 ];
 
 /* ---------- Партнёры ---------- */
