@@ -9,13 +9,17 @@ import {
 const PARTNER_PAGE_SIZE = 4;
 const PARTNER_CARD_H = 172;
 const PARTNER_GAP = 10;
+/* Заголовок страницы («ГОРОДСКИЕ ПЛОЩАДКИ» и т.п.) — строка + отступ mb-2,
+   тоже часть высоты страницы, иначе контейнер получается на ~25px ниже
+   реального содержимого и внутри появляется вертикальный скролл. */
+const PARTNER_LABEL_H = 25;
 
 /* Высота страницы карусели партнёров по числу карточек (1 или 2 ряда
    в сетке 2×N) — используется, чтобы контейнер карусели подстраивался
    под текущую видимую страницу, а не растягивался по самой высокой. */
 function partnerPageHeight(count: number): number {
   const rows = Math.ceil(count / 2);
-  return rows * PARTNER_CARD_H + (rows - 1) * PARTNER_GAP;
+  return PARTNER_LABEL_H + rows * PARTNER_CARD_H + (rows - 1) * PARTNER_GAP;
 }
 
 /* Дробим каждую тематическую группу партнёров на страницы максимум по 4
@@ -204,7 +208,7 @@ export function PartnersBlock({
   onAllServices: () => void;
 }) {
   const pages = useMemo(() => chunkPartnerPages(PARTNER_PAGES), []);
-  const { ref, index, onScroll, goTo } = useSnap(pages.length);
+  const { ref, index, onScroll, goTo, onPointerDown, onPointerMove, onPointerUp, onPointerCancel } = useSnap(pages.length);
 
   return (
     <Reveal>
@@ -219,8 +223,12 @@ export function PartnersBlock({
         <div
           ref={ref}
           onScroll={onScroll}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
           data-hscroll
-          className="no-scrollbar mt-3 flex snap-x snap-mandatory items-start overflow-x-auto transition-[height] duration-300 ease-out"
+          className="no-scrollbar mt-3 flex cursor-grab snap-x snap-mandatory items-start overflow-x-auto transition-[height] duration-300 ease-out active:cursor-grabbing"
           style={{ height: partnerPageHeight(pages[index]?.items.length ?? PARTNER_PAGE_SIZE) }}
         >
           {pages.map((page) => (
@@ -231,7 +239,7 @@ export function PartnersBlock({
                   <button
                     key={p.id}
                     onClick={() => onPick(p)}
-                    className="press group relative flex h-[172px] flex-col justify-between overflow-hidden rounded-2xl p-3 text-left shadow-card transition-shadow hover:shadow-float"
+                    className="press group relative flex h-[172px] flex-col justify-between overflow-hidden rounded-2xl p-3 text-left ring-1 ring-inset ring-white/10 shadow-card transition-shadow hover:shadow-float"
                     style={{ background: `linear-gradient(135deg, ${p.artFrom}, ${p.artTo})` }}
                   >
                     {/* тематическая «обложка» вместо фото — крупная иконка водяным знаком поверх градиента */}

@@ -194,7 +194,7 @@ export const SERVICE_SECTIONS: ServiceSection[] = [
   { id: "services", title: "Услуги и разрешения", desc: "Лицензии, согласования, разрешения", icon: "clipboard", tint: "#e6efff", category: "Разрешения" },
   { id: "support", title: "Меры поддержки", desc: "Субсидии, гранты, льготы", icon: "coins", tint: "#e3f6ec", category: "Поддержка" },
   { id: "realty", title: "Недвижимость", desc: "Аренда, выкуп, торги", icon: "building", tint: "#ece9ff", category: "Недвижимость" },
-  { id: "analytics", title: "Аналитика", desc: "Статистика, отчеты, данные", icon: "chart", tint: "#fff3d4", category: "Аналитика" },
+  { id: "analytics", title: "Отчеты", desc: "Статистика, отчеты, данные", icon: "chart", tint: "#fff3d4", category: "Отчеты" },
   { id: "logistics", title: "Логистика", desc: "Доставка, склад, грузоперевозки", icon: "truck", tint: "#ffe4cc", category: "Логистика" },
 ];
 
@@ -205,8 +205,8 @@ export const SERVICE_CATALOG: { id: string; title: string; desc: string; categor
   { id: "s4", title: "Грант молодым предпринимателям", desc: "До 500 тыс. ₽", category: "Поддержка", term: "30 дней", icon: "spark" },
   { id: "s5", title: "Аренда у города", desc: "Ставка от 1 000 ₽/м² в год", category: "Недвижимость", term: "торги", icon: "building" },
   { id: "s6", title: "Выкуп арендуемого имущества", desc: "Преимущественное право МСП", category: "Недвижимость", term: "45 дней", icon: "pin" },
-  { id: "s7", title: "Отчёт по форме МСП", desc: "Автоматическая выгрузка", category: "Аналитика", term: "мгновенно", icon: "chart" },
-  { id: "s8", title: "Данные по отраслям", desc: "API и витрины данных", category: "Аналитика", term: "мгновенно", icon: "chart" },
+  { id: "s7", title: "Отчёт по форме МСП", desc: "Автоматическая выгрузка", category: "Отчеты", term: "мгновенно", icon: "chart" },
+  { id: "s8", title: "Данные по отраслям", desc: "API и витрины данных", category: "Отчеты", term: "мгновенно", icon: "chart" },
   { id: "s9", title: "Курьерская доставка по Москве", desc: "Партнёрские тарифы, забор в день заказа", category: "Логистика", term: "от 1 дня", icon: "truck" },
   { id: "s10", title: "Складское хранение (фулфилмент)", desc: "Аренда складских мест под товар", category: "Логистика", term: "от 500 ₽/м²/мес", icon: "building" },
   { id: "s11", title: "Логистика для маркетплейсов", desc: "Доставка на склады Ozon, Wildberries, Я.Маркет", category: "Логистика", term: "от 1 дня", icon: "grid" },

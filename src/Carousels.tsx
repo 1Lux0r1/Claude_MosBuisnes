@@ -273,7 +273,7 @@ function HistoryChart({
 
 /* ---------- Курс валют ---------- */
 export function CurrencyCarousel() {
-  const { ref, index, onScroll, goTo } = useSnap(CURRENCIES.length);
+  const { ref, index, onScroll, goTo, onPointerDown, onPointerMove, onPointerUp, onPointerCancel } = useSnap(CURRENCIES.length);
   const [detail, setDetail] = useState<CurrencyItem | null>(null);
   const [connectedBankIds] = useState<string[]>(loadConnectedBankIds);
 
@@ -284,7 +284,16 @@ export function CurrencyCarousel() {
           <h2 className="font-display text-[15px] font-semibold tracking-tight">Курс валют</h2>
           <span className="text-[11px] font-bold text-faint">ЦБ РФ · сегодня</span>
         </div>
-        <div ref={ref} onScroll={onScroll} data-hscroll className="no-scrollbar mt-3 flex snap-x snap-mandatory overflow-x-auto pl-4">
+        <div
+          ref={ref}
+          onScroll={onScroll}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          data-hscroll
+          className="no-scrollbar mt-3 flex cursor-grab snap-x snap-mandatory overflow-x-auto pl-4 active:cursor-grabbing"
+        >
           {CURRENCIES.map((c) => (
             <div key={c.code} className="w-[calc(100%-32px)] shrink-0 snap-start">
               <button
@@ -456,7 +465,7 @@ export function NewsCarousel({
   onRead: (n: NewsItem) => void;
   onAllNews: () => void;
 }) {
-  const { ref, index, onScroll, goTo } = useSnap(HOME_NEWS.length);
+  const { ref, index, onScroll, goTo, onPointerDown, onPointerMove, onPointerUp, onPointerCancel } = useSnap(HOME_NEWS.length);
   return (
     <Reveal>
       <section>
@@ -464,7 +473,16 @@ export function NewsCarousel({
           <h2 className="font-display text-[15px] font-semibold tracking-tight">Новости</h2>
           <button onClick={onAllNews} className="press text-[12.5px] font-bold text-accent">Все новости</button>
         </div>
-        <div ref={ref} onScroll={onScroll} data-hscroll className="no-scrollbar mt-3 flex snap-x snap-mandatory overflow-x-auto pl-4">
+        <div
+          ref={ref}
+          onScroll={onScroll}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          data-hscroll
+          className="no-scrollbar mt-3 flex cursor-grab snap-x snap-mandatory overflow-x-auto pl-4 active:cursor-grabbing"
+        >
           {HOME_NEWS.map((n) => (
             <div key={n.id} className="w-[272px] shrink-0 snap-start pr-3">
               <article
