@@ -2,9 +2,29 @@ import { useMemo, useState } from "react";
 import { Icon } from "./icons";
 import { ChartOverlay, useToast } from "./ui";
 import {
-  addDays, dayKey, eventsForDate, eventsForMonth, MONTHS, MONTHS_NOM,
+  addDays, dayKey, eventsForDate, eventsForMonth, loadConnectedIntegrationIds, MONTHS, MONTHS_NOM,
   sameDay, sortByTime, startOfToday, WEEKDAYS, type CustomEvent, type DayEvent, type EventKind,
 } from "./data";
+import PaymentScreen from "./PaymentScreen";
+
+const fmtRub = (v: number) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(v)} ₽`;
+
+/* Заметка о том, что коммерческие платежи партнёров идут через 1С и без
+   интеграции не показываются — с кнопкой перехода к подключению. */
+function IntegrationNote({ onConnect }: { onConnect: () => void }) {
+  return (
+    <button
+      onClick={onConnect}
+      className="press mt-2.5 flex w-full items-center gap-2 rounded-xl bg-accent-soft/60 px-3 py-2 text-left transition-colors hover:bg-accent-soft"
+    >
+      <Icon name="link" className="h-3.5 w-3.5 shrink-0 text-accent-deep" strokeWidth={2.2} />
+      <span className="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-accent-deep">
+        Коммерческие платежи партнёров подключаются через 1С и без интеграции не показываются в календаре.
+      </span>
+      <span className="shrink-0 text-[11px] font-extrabold text-accent-deep underline underline-offset-2">Подключить</span>
+    </button>
+  );
+}
 
 const KIND_META: Record<EventKind, { label: string; bg: string; fg: string; dot: string }> = {
   critical: { label: "Важно", bg: "#fdeceb", fg: "#f5333f", dot: "#f5333f" },
@@ -91,9 +111,10 @@ function EventForm({
   );
 }
 
-export default function CalendarStrip() {
+export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegrations: () => void }) {
   const today = useMemo(startOfToday, []);
   const days = useMemo(() => Array.from({ length: 9 }, (_, i) => addDays(today, i - 2)), [today]);
+  const connected1C = useMemo(() => loadConnectedIntegrationIds().includes("1c"), []);
 
   /* По умолчанию события скрыты: карточка открывается только по тапу на дату */
   const [selected, setSelected] = useState<Date | null>(null);
@@ -102,10 +123,15 @@ export default function CalendarStrip() {
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState<EventFormValue>({ title: "", time: "12:00", kind: "info" });
   const [formError, setFormError] = useState(false);
+  const [payment, setPayment] = useState<{ event: DayEvent; date: Date } | null>(null);
   const toast = useToast();
 
+  /* Коммерческие платежи партнёров интегрируются через 1С — без активной
+     интеграции скрываем их и из ленты, и из месячного календаря. */
+  const visibleBase = (evs: DayEvent[]) => (connected1C ? evs : evs.filter((e) => e.payment?.type !== "commercial"));
+
   const mergedFor = (d: Date): (DayEvent | CustomEvent)[] =>
-    sortByTime([...eventsForDate(d), ...(custom[dayKey(d)] ?? [])]);
+    sortByTime([...visibleBase(eventsForDate(d)), ...(custom[dayKey(d)] ?? [])]);
 
   const persist = (next: Record<string, CustomEvent[]>) => {
     setCustom(next);
@@ -175,6 +201,8 @@ export default function CalendarStrip() {
           <Icon name="chevron-right" className="h-3.5 w-3.5" strokeWidth={2.4} />
         </button>
       </div>
+
+      {!connected1C && <IntegrationNote onConnect={onOpenIntegrations} />}
 
       {/* Линия дат: 9 ячеек (2 до сегодня + сегодня + 6 после) */}
       <div data-hscroll className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -262,30 +290,48 @@ export default function CalendarStrip() {
                   <ul className="mt-2.5 space-y-2">
                     {events.map((e, i) => {
                       const m = KIND_META[e.kind];
+                      const pay = e.payment;
+                      const Row = pay ? "button" : "div";
                       return (
-                        <li key={i} className="flex items-center gap-3 rounded-xl px-2.5 py-2" style={{ background: m.bg }}>
-                          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/85" style={{ color: m.fg }}>
-                            <Icon name={e.kind === "info" ? "calendar" : e.kind === "deadline" ? "clock" : "alert"} className="h-4 w-4" strokeWidth={2} />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[13px] font-bold leading-tight text-ink-solid">{e.title}</span>
-                            <span className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-ink-solid/55">
-                              <span style={{ color: m.fg }}>{e.time}</span>
-                              {e.place && <span className="truncate">· {e.place}</span>}
+                        <li key={i}>
+                          <Row
+                            {...(pay ? { onClick: () => setPayment({ event: e, date: selected! }) } : {})}
+                            className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left ${pay ? "press transition-colors hover:brightness-95" : ""}`}
+                            style={{ background: m.bg }}
+                          >
+                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/85" style={{ color: m.fg }}>
+                              <Icon
+                                name={pay ? "coins" : e.kind === "info" ? "calendar" : e.kind === "deadline" ? "clock" : "alert"}
+                                className="h-4 w-4"
+                                strokeWidth={2}
+                              />
                             </span>
-                          </span>
-                          {"custom" in e && (
-                            <button
-                              onClick={() => deleteEvent(e.id)}
-                              className="press grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/85 text-ink2-solid"
-                              aria-label="Удалить событие"
-                            >
-                              <Icon name="close" className="h-3 w-3" strokeWidth={2.4} />
-                            </button>
-                          )}
-                          <span className="shrink-0 rounded-full bg-white/85 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide" style={{ color: m.fg }}>
-                            {m.label}
-                          </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-[13px] font-bold leading-tight text-ink-solid">{e.title}</span>
+                              <span className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-ink-solid/55">
+                                <span style={{ color: m.fg }}>{e.time}</span>
+                                {pay ? <span className="truncate">· {fmtRub(pay.amount)}</span> : e.place && <span className="truncate">· {e.place}</span>}
+                              </span>
+                            </span>
+                            {"custom" in e && !pay && (
+                              <button
+                                onClick={() => deleteEvent(e.id)}
+                                className="press grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/85 text-ink2-solid"
+                                aria-label="Удалить событие"
+                              >
+                                <Icon name="close" className="h-3 w-3" strokeWidth={2.4} />
+                              </button>
+                            )}
+                            {pay ? (
+                              <span className="shrink-0" style={{ color: m.fg }}>
+                                <Icon name="chevron-right" className="h-4 w-4" strokeWidth={2.2} />
+                              </span>
+                            ) : (
+                              <span className="shrink-0 rounded-full bg-white/85 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide" style={{ color: m.fg }}>
+                                {m.label}
+                              </span>
+                            )}
+                          </Row>
                         </li>
                       );
                     })}
@@ -329,6 +375,17 @@ export default function CalendarStrip() {
         custom={custom}
         onAddEvent={addEvent}
         onDeleteEvent={removeEvent}
+        connected1C={connected1C}
+        onOpenIntegrations={onOpenIntegrations}
+        onOpenPayment={(date, event) => setPayment({ date, event })}
+      />
+
+      <PaymentScreen
+        open={!!payment}
+        event={payment?.event ?? null}
+        date={payment?.date ?? null}
+        onClose={() => setPayment(null)}
+        onOpenProfile={onOpenIntegrations}
       />
     </section>
   );
@@ -336,13 +393,16 @@ export default function CalendarStrip() {
 
 /* ---------- Полный месяц ---------- */
 function MonthSheet({
-  open, onClose, custom, onAddEvent, onDeleteEvent,
+  open, onClose, custom, onAddEvent, onDeleteEvent, connected1C, onOpenIntegrations, onOpenPayment,
 }: {
   open: boolean;
   onClose: () => void;
   custom: Record<string, CustomEvent[]>;
   onAddEvent: (key: string, ev: CustomEvent) => void;
   onDeleteEvent: (key: string, id: string) => void;
+  connected1C: boolean;
+  onOpenIntegrations: () => void;
+  onOpenPayment: (date: Date, event: DayEvent) => void;
 }) {
   const today = useMemo(startOfToday, []);
   const [view, setView] = useState(() => ({ y: today.getFullYear(), m: today.getMonth() }));
@@ -372,12 +432,15 @@ function MonthSheet({
   const monthEvents = useMemo(() => {
     const base = eventsForMonth(view.y, view.m);
     const merged = new Map<string, (DayEvent | CustomEvent)[]>();
-    base.forEach((evs, key) => merged.set(key, evs));
+    base.forEach((evs, key) => {
+      const visible = connected1C ? evs : evs.filter((e) => e.payment?.type !== "commercial");
+      if (visible.length) merged.set(key, visible);
+    });
     Object.entries(custom).forEach(([key, evs]) => {
       merged.set(key, sortByTime([...(merged.get(key) ?? []), ...evs]));
     });
     return merged;
-  }, [view, custom]);
+  }, [view, custom, connected1C]);
 
   const offset = (new Date(view.y, view.m, 1).getDay() + 6) % 7;
   const daysIn = new Date(view.y, view.m + 1, 0).getDate();
@@ -405,6 +468,8 @@ function MonthSheet({
           <Icon name="chevron-right" className="h-[18px] w-[18px]" strokeWidth={2.2} />
         </button>
       </div>
+
+      {!connected1C && <IntegrationNote onConnect={onOpenIntegrations} />}
 
       <div className="mt-4 grid grid-cols-7 gap-1 text-center">
         {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((d) => (
@@ -447,25 +512,45 @@ function MonthSheet({
             <p className="mt-2 rounded-xl bg-paper px-3 py-3 text-[12.5px] font-medium text-sub">Событий нет — день свободен для задач.</p>
           ) : (
             <ul className="mt-2 space-y-1.5">
-              {(monthEvents.get(dayKey(sel)) ?? []).map((e, i) => (
-                <li key={i} className="flex items-center gap-2.5 rounded-xl px-3 py-2.5" style={{ background: KIND_META[e.kind].bg }}>
-                  <span className="text-[11.5px] font-extrabold" style={{ color: KIND_META[e.kind].fg }}>{e.time}</span>
-                  <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-ink-solid">{e.title}</span>
-                  {"custom" in e && (
-                    <>
-                      <span className="shrink-0 text-[9.5px] font-extrabold uppercase tracking-wide text-ink-solid/55">личное</span>
-                      <button
-                        onClick={() => onDeleteEvent(dayKey(sel), e.id)}
-                        className="press grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/85 text-ink2-solid"
-                        aria-label="Удалить событие"
-                      >
-                        <Icon name="close" className="h-3 w-3" strokeWidth={2.4} />
-                      </button>
-                    </>
-                  )}
-                  <span className="text-[10px] font-extrabold uppercase" style={{ color: KIND_META[e.kind].fg }}>{KIND_META[e.kind].label}</span>
-                </li>
-              ))}
+              {(monthEvents.get(dayKey(sel)) ?? []).map((e, i) => {
+                const m = KIND_META[e.kind];
+                const pay = e.payment;
+                const Row = pay ? "button" : "div";
+                return (
+                  <li key={i}>
+                    <Row
+                      {...(pay ? { onClick: () => onOpenPayment(sel, e) } : {})}
+                      className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left ${pay ? "press transition-colors hover:brightness-95" : ""}`}
+                      style={{ background: m.bg }}
+                    >
+                      <span className="text-[11.5px] font-extrabold" style={{ color: m.fg }}>{e.time}</span>
+                      <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-ink-solid">
+                        {e.title}
+                        {pay && <span className="ml-1.5 font-semibold text-ink-solid/55">· {fmtRub(pay.amount)}</span>}
+                      </span>
+                      {"custom" in e && !pay && (
+                        <>
+                          <span className="shrink-0 text-[9.5px] font-extrabold uppercase tracking-wide text-ink-solid/55">личное</span>
+                          <button
+                            onClick={() => onDeleteEvent(dayKey(sel), e.id)}
+                            className="press grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/85 text-ink2-solid"
+                            aria-label="Удалить событие"
+                          >
+                            <Icon name="close" className="h-3 w-3" strokeWidth={2.4} />
+                          </button>
+                        </>
+                      )}
+                      {pay ? (
+                        <span className="shrink-0" style={{ color: m.fg }}>
+                          <Icon name="chevron-right" className="h-4 w-4" strokeWidth={2.2} />
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-extrabold uppercase" style={{ color: m.fg }}>{m.label}</span>
+                      )}
+                    </Row>
+                  </li>
+                );
+              })}
             </ul>
           )}
 
