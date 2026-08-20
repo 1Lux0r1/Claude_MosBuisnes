@@ -200,6 +200,7 @@ export function useSnap(count: number) {
   const ref = useRef<HTMLDivElement>(null);
   const raf = useRef(0);
   const [index, setIndex] = useState(0);
+  const drag = useRef<{ startX: number; scrollLeft: number; moved: boolean } | null>(null);
 
   useEffect(() => () => window.cancelAnimationFrame(raf.current), []);
 
@@ -219,7 +220,49 @@ export function useSnap(count: number) {
     el.scrollTo({ left: (el.scrollWidth / count) * i, behavior: "smooth" });
   };
 
-  return { ref, index, onScroll, goTo };
+  /* Свайп зажатой мышкой — на десктопе, где демонстрируют приложение с
+     компьютера, нет тачскрина и нативного скролла свайпом. Работает только
+     для pointerType "mouse" (touch/pen уже скроллятся нативно). Если реально
+     было перетаскивание (сдвиг больше порога), следующий клик по карточке
+     под курсором подавляется — иначе drag открывал бы карточку. */
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const el = ref.current;
+    if (!el) return;
+    drag.current = { startX: e.clientX, scrollLeft: el.scrollLeft, moved: false };
+    el.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    const el = ref.current;
+    if (!d || !el) return;
+    const dx = e.clientX - d.startX;
+    if (Math.abs(dx) > 4) d.moved = true;
+    el.scrollLeft = d.scrollLeft - dx;
+  };
+
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    const el = ref.current;
+    drag.current = null;
+    if (!d || !el) return;
+    if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    if (!d.moved) return;
+    const suppressClick = (ev: MouseEvent) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+    };
+    el.addEventListener("click", suppressClick, { capture: true, once: true });
+    window.setTimeout(() => el.removeEventListener("click", suppressClick, { capture: true }), 0);
+    const i = Math.round((el.scrollLeft / el.scrollWidth) * count);
+    goTo(Math.max(0, Math.min(count - 1, i)));
+  };
+
+  return {
+    ref, index, onScroll, goTo,
+    onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag,
+  };
 }
 
 /* ---------- Скелетоны загрузки ---------- */
