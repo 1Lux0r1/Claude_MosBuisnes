@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, MobiusIcon, type IconName } from "../icons";
 import { Reveal, Toggle, useToast } from "../ui";
 import {
-  addDays, startOfToday, BANKS, BANKS_STORAGE_KEY, INTEGRATIONS_STORAGE_KEY, type BankAccount, type BankInfo,
+  BANKS, BANKS_STORAGE_KEY, INTEGRATIONS_STORAGE_KEY, loadApplications,
+  type Application, type AppStatus, type BankAccount, type BankInfo,
 } from "../data";
 
 /* ============================================================
@@ -15,18 +16,6 @@ import {
    ============================================================ */
 
 /* ---------- Заявления ---------- */
-type AppStatus = "review" | "docs" | "approved" | "rejected" | "draft";
-interface Application { id: string; title: string; service: string; submittedOff: number; deadlineOff: number; status: AppStatus }
-
-const APPLICATIONS: Application[] = [
-  { id: "a1", title: "Субсидия на оборудование", service: "Меры поддержки", submittedOff: -12, deadlineOff: 2, status: "review" },
-  { id: "a5", title: "Справка о деятельности", service: "Услуги и разрешения", submittedOff: -2, deadlineOff: 1, status: "review" },
-  { id: "a3", title: "Грант молодым предпринимателям", service: "Меры поддержки", submittedOff: -6, deadlineOff: 5, status: "docs" },
-  { id: "a7", title: "Согласование вывески", service: "Услуги и разрешения", submittedOff: 0, deadlineOff: 14, status: "draft" },
-  { id: "a2", title: "Лицензия на торговлю", service: "Услуги и разрешения", submittedOff: -30, deadlineOff: -3, status: "approved" },
-  { id: "a4", title: "Аренда городского помещения", service: "Недвижимость", submittedOff: -45, deadlineOff: -20, status: "rejected" },
-];
-
 const STATUS_META: Record<AppStatus, { label: string; bg: string; fg: string; icon: IconName }> = {
   review: { label: "На проверке", bg: "#fff3d4", fg: "#b97a00", icon: "clock" },
   docs: { label: "Нужен документ", bg: "#fdeceb", fg: "#f5333f", icon: "alert" },
@@ -113,8 +102,8 @@ function useCountUp(target: number, duration = 900) {
 }
 
 const fmtMoney = (v: number) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(v)} ₽`;
-const fmtDate = (off: number) => {
-  const d = addDays(startOfToday(), off);
+const fmtDate = (ts: number) => {
+  const d = new Date(ts);
   return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}`;
 };
 const initials = (name: string) => name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -237,9 +226,11 @@ export default function ProfileService() {
     }, 900);
   };
 
-  /* --- Заявления --- */
-  const activeCount = APPLICATIONS.filter((a) => isActiveStatus(a.status)).length;
-  const doneCount = APPLICATIONS.length - activeCount;
+  /* --- Заявления: пишутся и здесь, и с экрана «Услуги» (ServicesScreen) ---
+     общий localStorage, поэтому оформленная заявка сразу видна как активная. */
+  const [applications] = useState<Application[]>(loadApplications);
+  const activeCount = applications.filter((a) => isActiveStatus(a.status)).length;
+  const doneCount = applications.length - activeCount;
 
   /* --- Сотрудники --- */
   const [employees, setEmployees] = useState<Employee[]>(() => loadJSON(LS_EMPLOYEES, INITIAL_EMPLOYEES));
@@ -368,7 +359,7 @@ export default function ProfileService() {
 
   /* ================= ЭКРАН: заявления ================= */
   if (view.t === "apps") {
-    return <ApplicationsView onBack={() => setView({ t: "root" })} />;
+    return <ApplicationsView applications={applications} onBack={() => setView({ t: "root" })} />;
   }
 
   /* ================= ЭКРАН: права сотрудника ================= */
@@ -607,15 +598,15 @@ export default function ProfileService() {
           >
             <div className="flex items-center gap-4">
               <div>
-                <p className="font-display text-[30px] font-semibold leading-none tracking-tight text-accent-deep">{APPLICATIONS.length}</p>
+                <p className="font-display text-[30px] font-semibold leading-none tracking-tight text-accent-deep">{applications.length}</p>
                 <p className="mt-1 text-[10.5px] font-extrabold uppercase tracking-wide text-faint">подано</p>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex h-2 overflow-hidden rounded-full bg-paper">
                   {(["review", "docs", "draft", "approved", "rejected"] as AppStatus[]).map((s) => {
-                    const n = APPLICATIONS.filter((a) => a.status === s).length;
+                    const n = applications.filter((a) => a.status === s).length;
                     return n ? (
-                      <span key={s} style={{ width: `${(n / APPLICATIONS.length) * 100}%`, background: STATUS_META[s].fg, opacity: s === "rejected" ? 0.45 : 0.9 }} />
+                      <span key={s} style={{ width: `${(n / applications.length) * 100}%`, background: STATUS_META[s].fg, opacity: s === "rejected" ? 0.45 : 0.9 }} />
                     ) : null;
                   })}
                 </div>
@@ -847,19 +838,19 @@ function SubView({ title, onBack, children }: { title: string; onBack: () => voi
 }
 
 /* ---------- Заявления: расширенный список (хотбар: Активно / Выполнено) ---------- */
-function ApplicationsView({ onBack }: { onBack: () => void }) {
+function ApplicationsView({ applications, onBack }: { applications: Application[]; onBack: () => void }) {
   const [filter, setFilter] = useState<"active" | "done">("active");
-  const list = APPLICATIONS.filter((a) => (filter === "active" ? isActiveStatus(a.status) : !isActiveStatus(a.status)));
-  const activeCount = APPLICATIONS.filter((a) => isActiveStatus(a.status)).length;
+  const list = applications.filter((a) => (filter === "active" ? isActiveStatus(a.status) : !isActiveStatus(a.status)));
+  const activeCount = applications.filter((a) => isActiveStatus(a.status)).length;
 
   return (
     <SubView title="Заявления организации" onBack={onBack}>
       <p className="mt-1 text-[12.5px] font-semibold text-sub">
-        Всего {APPLICATIONS.length} · активных {activeCount} · выполнено {APPLICATIONS.length - activeCount}
+        Всего {applications.length} · активных {activeCount} · выполнено {applications.length - activeCount}
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-1.5">
-        {([{ id: "active", label: "Активно", n: activeCount }, { id: "done", label: "Выполнено", n: APPLICATIONS.length - activeCount }] as const).map((f) => (
+        {([{ id: "active", label: "Активно", n: activeCount }, { id: "done", label: "Выполнено", n: applications.length - activeCount }] as const).map((f) => (
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
@@ -886,7 +877,7 @@ function ApplicationsView({ onBack }: { onBack: () => void }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-[13.5px] font-extrabold leading-tight tracking-tight">{a.title}</p>
-                    <p className="mt-0.5 text-[11px] font-semibold text-sub">{a.service} · подано {fmtDate(a.submittedOff)}</p>
+                    <p className="mt-0.5 text-[11px] font-semibold text-sub">{a.service} · подано {fmtDate(a.submittedAt)}</p>
                   </div>
                   <span className="shrink-0 rounded-full px-2 py-1 text-[9.5px] font-extrabold uppercase tracking-wide" style={{ background: m.bg, color: m.fg }}>
                     {m.label}
@@ -894,7 +885,7 @@ function ApplicationsView({ onBack }: { onBack: () => void }) {
                 </div>
                 <div className="mt-2.5 flex items-center justify-between rounded-xl bg-paper px-3 py-2">
                   <span className="text-[10.5px] font-extrabold uppercase tracking-wide text-faint">Срок</span>
-                  <DeadlineChip off={a.deadlineOff} active={isActive} />
+                  <DeadlineChip deadlineAt={a.deadlineAt} active={isActive} />
                 </div>
               </div>
             </Reveal>
@@ -905,13 +896,14 @@ function ApplicationsView({ onBack }: { onBack: () => void }) {
   );
 }
 
-function DeadlineChip({ off, active }: { off: number; active: boolean }) {
+function DeadlineChip({ deadlineAt, active }: { deadlineAt: number; active: boolean }) {
   if (!active) {
-    return <span className="text-[11.5px] font-extrabold text-sub">Завершено {fmtDate(off)}</span>;
+    return <span className="text-[11.5px] font-extrabold text-sub">Завершено {fmtDate(deadlineAt)}</span>;
   }
+  const off = Math.ceil((deadlineAt - Date.now()) / 86_400_000);
   if (off < 0) return <span className="text-[11.5px] font-extrabold text-danger">Просрочено на {Math.abs(off)} дн.</span>;
   if (off === 0) return <span className="text-[11.5px] font-extrabold text-danger">Истекает сегодня</span>;
-  if (off <= 2) return <span className="text-[11.5px] font-extrabold text-danger">Остался {off} дн. · до {fmtDate(off)}</span>;
-  if (off <= 7) return <span className="text-[11.5px] font-extrabold text-warn">Осталось {off} дн. · до {fmtDate(off)}</span>;
-  return <span className="text-[11.5px] font-extrabold text-accent-deep">Осталось {off} дн. · до {fmtDate(off)}</span>;
+  if (off <= 2) return <span className="text-[11.5px] font-extrabold text-danger">Остался {off} дн. · до {fmtDate(deadlineAt)}</span>;
+  if (off <= 7) return <span className="text-[11.5px] font-extrabold text-warn">Осталось {off} дн. · до {fmtDate(deadlineAt)}</span>;
+  return <span className="text-[11.5px] font-extrabold text-accent-deep">Осталось {off} дн. · до {fmtDate(deadlineAt)}</span>;
 }

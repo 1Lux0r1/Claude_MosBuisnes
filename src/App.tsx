@@ -527,15 +527,24 @@ function ActionSheetView({
           ))}
         </ul>
 
-        <button
-          onClick={() => {
-            toast(`Заявка на подключение отправлена: ${p.name}`, "check");
-            onClose();
-          }}
-          className="press mt-4 w-full rounded-full bg-accent py-3 text-[13px] font-extrabold text-white"
-        >
-          Подключить услугу
-        </button>
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={() => {
+              toast(`Заявка на подключение отправлена: ${p.name}`, "check");
+              onClose();
+            }}
+            className="press flex-1 rounded-full bg-paper py-3 text-[13px] font-extrabold text-ink2"
+          >
+            Подключить услугу
+          </button>
+          <button
+            onClick={() => window.open(p.url, "_blank", "noopener,noreferrer")}
+            className="press inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-3 text-[13px] font-extrabold text-white"
+          >
+            Перейти
+            <Icon name="arrow-right" className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </button>
+        </div>
       </Sheet>
     );
   }
