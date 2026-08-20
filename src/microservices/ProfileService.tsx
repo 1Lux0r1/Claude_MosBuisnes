@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, MobiusIcon, type IconName } from "../icons";
 import { Reveal, Toggle, useToast } from "../ui";
-import { addDays, startOfToday, BANKS, BANKS_STORAGE_KEY, type BankAccount, type BankInfo } from "../data";
+import {
+  addDays, startOfToday, BANKS, BANKS_STORAGE_KEY, INTEGRATIONS_STORAGE_KEY, type BankAccount, type BankInfo,
+} from "../data";
 
 /* ============================================================
    Микросервис «Личный кабинет» · v2.1
@@ -82,7 +84,6 @@ const INITIAL_EMPLOYEES: Employee[] = [
 const AVATAR_COLORS = ["#0a6bff", "#148a4c", "#b97a00", "#e11d3a", "#0e8a8a"];
 
 /* ---------- Хранилище ---------- */
-const LS_INTEGRATIONS = "cevba-integrations-v1";
 const LS_EMPLOYEES = "cevba-employees-v1";
 
 function loadJSON<T>(key: string, fallback: T): T {
@@ -199,7 +200,7 @@ export default function ProfileService() {
   };
 
   /* --- Интеграции --- */
-  const [connectedSys, setConnectedSys] = useState<string[]>(() => loadJSON<{ ids: string[] }>(LS_INTEGRATIONS, { ids: [] }).ids);
+  const [connectedSys, setConnectedSys] = useState<string[]>(() => loadJSON<{ ids: string[] }>(INTEGRATIONS_STORAGE_KEY, { ids: [] }).ids);
   const [lastSync, setLastSync] = useState<Record<string, number>>({});
   const [syncing, setSyncing] = useState<string | null>(null);
   const syncTimer = useRef(0);
@@ -207,7 +208,7 @@ export default function ProfileService() {
 
   const persistSystems = (ids: string[]) => {
     setConnectedSys(ids);
-    localStorage.setItem(LS_INTEGRATIONS, JSON.stringify({ ids }));
+    localStorage.setItem(INTEGRATIONS_STORAGE_KEY, JSON.stringify({ ids }));
   };
 
   const connectSystem = (s: IntegrationSystem) => {

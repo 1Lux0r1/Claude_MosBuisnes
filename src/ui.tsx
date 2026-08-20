@@ -43,7 +43,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
    спозиционированный оверлей до видимого фрагмента main — портал выносит
    его DOM-узел на уровень Shell, где absolute inset-0 работает как задумано,
    независимо от места вызова. Используется и Sheet, и ChartOverlay. */
-function useShellPortal() {
+export function useShellPortal() {
   const [container] = useState(() => {
     const el = document.createElement("div");
     el.className = "contents";
@@ -61,7 +61,7 @@ function useShellPortal() {
   return container;
 }
 
-function useEscapeKey(active: boolean, onEscape: () => void) {
+export function useEscapeKey(active: boolean, onEscape: () => void) {
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onEscape();

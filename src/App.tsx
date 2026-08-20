@@ -257,6 +257,7 @@ function Shell(props: {
                   }}
                   onNews={(n) => setSheet({ kind: "news", data: n })}
                   onAllNews={() => setSheet({ kind: "newslist" })}
+                  onOpenIntegrations={() => onGoTab(3)}
                 />
               ))}
             {tab === 1 && <ServicesScreen category={servicesCategory} onCategory={setServicesCategory} />}
@@ -299,7 +300,7 @@ function Shell(props: {
 
 /* ---------- Главный экран ---------- */
 function HomeScreen({
-  onQuickAction, quickActionIds, onOpenQuickActionsPicker, onSection, onPartner, onAllServices, onNews, onAllNews,
+  onQuickAction, quickActionIds, onOpenQuickActionsPicker, onSection, onPartner, onAllServices, onNews, onAllNews, onOpenIntegrations,
 }: {
   onQuickAction: (a: QuickAction) => void;
   quickActionIds: string[];
@@ -309,10 +310,11 @@ function HomeScreen({
   onAllServices: () => void;
   onNews: (n: NewsItem) => void;
   onAllNews: () => void;
+  onOpenIntegrations: () => void;
 }) {
   return (
     <div className="space-y-7 pt-4 pb-8">
-      <CalendarStrip />
+      <CalendarStrip onOpenIntegrations={onOpenIntegrations} />
       <QuickActions onPick={onQuickAction} enabled={quickActionIds} onOpenPicker={onOpenQuickActionsPicker} />
       <ServiceSections onPick={onSection} />
       <PartnersBlock onPick={onPartner} onAllServices={onAllServices} />

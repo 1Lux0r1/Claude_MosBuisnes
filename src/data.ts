@@ -3,11 +3,26 @@ import type { IconName } from "./icons";
 /* ---------- Типы ---------- */
 export type EventKind = "critical" | "deadline" | "info";
 
+/** Тип предстоящего платежа: коммерческий (партнёрам, через 1С) или
+ *  государственный (налоги, взносы — не требует интеграции). */
+export type PaymentType = "commercial" | "government";
+
+export interface PaymentInfo {
+  type: PaymentType;
+  amount: number;
+  recipient: string;
+  purpose: string;
+  account?: string;
+  inn?: string;
+}
+
 export interface DayEvent {
   time: string;
   title: string;
   kind: EventKind;
   place?: string;
+  /** Если задано — событие «Оплата» открывает экран платежа по тапу */
+  payment?: PaymentInfo;
 }
 
 export interface CustomEvent extends DayEvent {
@@ -109,8 +124,38 @@ const EVENTS: { off: number; ev: DayEvent }[] = [
   { off: 0, ev: { time: "18:00", title: "Звонок с куратором субсидии", kind: "info" } },
   { off: 1, ev: { time: "23:59", title: "Оплата патента — истекает срок", kind: "critical", place: "ФНС" } },
   { off: 2, ev: { time: "17:00", title: "Отчёт по субсидии (форма 3)", kind: "deadline", place: "личный кабинет" } },
+  {
+    off: 1,
+    ev: {
+      time: "14:00", title: "Оплата поставщику: ООО «Логистик Про»", kind: "deadline", place: "1С",
+      payment: {
+        type: "commercial", amount: 356_200, recipient: "ООО «Логистик Про»",
+        purpose: "Курьерская доставка — счёт №482 от 14.08.2026", account: "40702810438000012345", inn: "7743017994",
+      },
+    },
+  },
+  {
+    off: 3,
+    ev: {
+      time: "23:59", title: "Уплата НДФЛ за сотрудников", kind: "deadline", place: "ФНС",
+      payment: {
+        type: "government", amount: 184_300, recipient: "ФНС России",
+        purpose: "НДФЛ с заработной платы за август 2026", inn: "7727406020",
+      },
+    },
+  },
   { off: 4, ev: { time: "19:00", title: "Нетворкинг резидентов МосБизнес", kind: "info", place: "Технопарк «Сколково»" } },
   { off: 5, ev: { time: "12:00", title: "НДС: подача декларации", kind: "deadline", place: "ФНС" } },
+  {
+    off: 8,
+    ev: {
+      time: "12:00", title: "Оплата: ИП Кузнецова (клининг офиса)", kind: "deadline", place: "1С",
+      payment: {
+        type: "commercial", amount: 42_000, recipient: "ИП Кузнецова Е. В.",
+        purpose: "Клининговые услуги — счёт №117 от 10.08.2026", account: "40802810900000067213", inn: "772345678900",
+      },
+    },
+  },
   { off: 6, ev: { time: "15:00", title: "Экскурсия по технопарку", kind: "info", place: "Технопарк" } },
   { off: 9, ev: { time: "10:00", title: "Торги: аренда помещений", kind: "info", place: "Инвестпортал" } },
   { off: 12, ev: { time: "23:59", title: "Страховые взносы ИП", kind: "critical", place: "ФНС" } },
@@ -431,6 +476,23 @@ export function loadConnectedBankIds(): string[] {
     if (Array.isArray(ids) && ids.every((x) => typeof x === "string")) return ids;
   } catch {
     /* повреждённые данные — считаем, что банки не подключены */
+  }
+  return [];
+}
+
+export const INTEGRATIONS_STORAGE_KEY = "cevba-integrations-v1";
+
+/** Подключённые учётные системы (см. «Интеграции» в личном кабинете) — тот же
+ *  localStorage, которым управляет ProfileService. Календарь читает его, чтобы
+ *  без активной интеграции с 1С не показывать коммерческие платежи партнёров. */
+export function loadConnectedIntegrationIds(): string[] {
+  try {
+    const raw = localStorage.getItem(INTEGRATIONS_STORAGE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    const ids = (parsed as { ids?: unknown } | null)?.ids;
+    if (Array.isArray(ids) && ids.every((x) => typeof x === "string")) return ids;
+  } catch {
+    /* повреждённые данные — считаем, что интеграции не подключены */
   }
   return [];
 }
