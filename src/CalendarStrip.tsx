@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Icon } from "./icons";
-import { Sheet, useToast } from "./ui";
+import { ChartOverlay, useToast } from "./ui";
 import {
   addDays, dayKey, eventsForDate, eventsForMonth, MONTHS, MONTHS_NOM,
   sameDay, sortByTime, startOfToday, WEEKDAYS, type CustomEvent, type DayEvent, type EventKind,
@@ -391,7 +391,7 @@ function MonthSheet({
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title={`${MONTHS_NOM[view.m]} ${view.y}`}>
+    <ChartOverlay open={open} onClose={onClose} title={`${MONTHS_NOM[view.m]} ${view.y}`}>
       <div className="flex items-center justify-between">
         <button onClick={() => nav(-1)} className="press grid h-9 w-9 place-items-center rounded-full bg-paper text-ink2" aria-label="Предыдущий месяц">
           <Icon name="chevron-left" className="h-[18px] w-[18px]" strokeWidth={2.2} />
@@ -496,6 +496,6 @@ function MonthSheet({
           )}
         </div>
       )}
-    </Sheet>
+    </ChartOverlay>
   );
 }
