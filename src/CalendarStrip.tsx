@@ -7,9 +7,9 @@ import {
 } from "./data";
 
 const KIND_META: Record<EventKind, { label: string; bg: string; fg: string; dot: string }> = {
-  critical: { label: "Критично", bg: "#fdeceb", fg: "#f5333f", dot: "#f5333f" },
-  deadline: { label: "Дедлайн", bg: "#fff3d4", fg: "#b97a00", dot: "#f2a900" },
-  info: { label: "Событие", bg: "#e6efff", fg: "#0a6bff", dot: "#0a6bff" },
+  critical: { label: "Важно", bg: "#fdeceb", fg: "#f5333f", dot: "#f5333f" },
+  deadline: { label: "Оплата", bg: "#fff3d4", fg: "#b97a00", dot: "#f2a900" },
+  info: { label: "Встреча", bg: "#e6efff", fg: "#0a6bff", dot: "#0a6bff" },
 };
 
 function priority(evs: DayEvent[]): EventKind | null {
@@ -53,32 +53,30 @@ function EventForm({
         }`}
       />
       {error && <p className="mt-1 text-[11px] font-bold text-danger">Введите название события</p>}
-      <div className="mt-2.5 flex items-center gap-2">
-        <label className="flex h-10 items-center gap-2 rounded-xl border border-line bg-card px-3">
-          <Icon name="clock" className="h-4 w-4 text-sub" strokeWidth={2} />
-          <input
-            type="time"
-            value={form.time}
-            onChange={(e) => onChange({ ...form, time: e.target.value })}
-            className="bg-transparent text-[13px] font-bold outline-none"
-          />
-        </label>
-        <div className="flex gap-1.5">
-          {(Object.keys(KIND_META) as EventKind[]).map((k) => (
-            <button
-              key={k}
-              onClick={() => onChange({ ...form, kind: k })}
-              className="press rounded-full px-2.5 py-1.5 text-[10.5px] font-extrabold transition-all"
-              style={
-                form.kind === k
-                  ? { background: KIND_META[k].dot, color: "#fff" }
-                  : { background: KIND_META[k].bg, color: KIND_META[k].fg }
-              }
-            >
-              {KIND_META[k].label}
-            </button>
-          ))}
-        </div>
+      <label className="mt-2.5 flex h-10 w-full items-center gap-2 rounded-xl border border-line bg-card px-3">
+        <Icon name="clock" className="h-4 w-4 shrink-0 text-sub" strokeWidth={2} />
+        <input
+          type="time"
+          value={form.time}
+          onChange={(e) => onChange({ ...form, time: e.target.value })}
+          className="w-full bg-transparent text-[13px] font-bold outline-none"
+        />
+      </label>
+      <div className="mt-2 flex gap-1.5">
+        {(Object.keys(KIND_META) as EventKind[]).map((k) => (
+          <button
+            key={k}
+            onClick={() => onChange({ ...form, kind: k })}
+            className="press flex-1 rounded-full px-2.5 py-1.5 text-[10.5px] font-extrabold transition-all"
+            style={
+              form.kind === k
+                ? { background: KIND_META[k].dot, color: "#fff" }
+                : { background: KIND_META[k].bg, color: KIND_META[k].fg }
+            }
+          >
+            {KIND_META[k].label}
+          </button>
+        ))}
       </div>
       <div className="mt-3 flex justify-end gap-2">
         <button onClick={onCancel} className="press rounded-full bg-card px-4 py-2 text-[12px] font-extrabold text-sub">
@@ -203,7 +201,7 @@ export default function CalendarStrip() {
                 {d.getDate()}
               </span>
               <span className="mt-1 text-[10px] font-bold uppercase tracking-wide text-sub">
-                {sameDay(d, today) ? "Сег" : WEEKDAYS[d.getDay()]}
+                {WEEKDAYS[d.getDay()]}
               </span>
               <span className="text-[9.5px] font-medium text-faint">{MONTHS[d.getMonth()].slice(0, 3)}</span>
               {evs.length > 0 && (
@@ -399,7 +397,9 @@ function MonthSheet({
           <Icon name="chevron-left" className="h-[18px] w-[18px]" strokeWidth={2.2} />
         </button>
         <p className="text-[12px] font-bold text-sub">
-          Легенда: <span className="text-danger">●</span> сроки <span className="ml-1.5 text-[#f2a900]">●</span> дедлайны <span className="ml-1.5 text-accent">●</span> события
+          Легенда: <span className="text-danger">●</span> {KIND_META.critical.label.toLowerCase()}{" "}
+          <span className="ml-1.5 text-[#f2a900]">●</span> {KIND_META.deadline.label.toLowerCase()}{" "}
+          <span className="ml-1.5 text-accent">●</span> {KIND_META.info.label.toLowerCase()}
         </p>
         <button onClick={() => nav(1)} className="press grid h-9 w-9 place-items-center rounded-full bg-paper text-ink2" aria-label="Следующий месяц">
           <Icon name="chevron-right" className="h-[18px] w-[18px]" strokeWidth={2.2} />

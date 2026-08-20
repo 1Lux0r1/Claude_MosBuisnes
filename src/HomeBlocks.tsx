@@ -1,9 +1,38 @@
+import { useMemo } from "react";
 import { Icon, type IconName } from "./icons";
 import { Dots, Reveal, Sheet, useSnap } from "./ui";
 import {
   DEFAULT_QUICK_ACTION_IDS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS,
   type Partner, type QuickAction, type ServiceSection,
 } from "./data";
+
+const PARTNER_PAGE_SIZE = 4;
+const PARTNER_CARD_H = 172;
+const PARTNER_GAP = 10;
+
+/* Высота страницы карусели партнёров по числу карточек (1 или 2 ряда
+   в сетке 2×N) — используется, чтобы контейнер карусели подстраивался
+   под текущую видимую страницу, а не растягивался по самой высокой. */
+function partnerPageHeight(count: number): number {
+  const rows = Math.ceil(count / 2);
+  return rows * PARTNER_CARD_H + (rows - 1) * PARTNER_GAP;
+}
+
+/* Дробим каждую тематическую группу партнёров на страницы максимум по 4
+   карточки (сетка 2×2): иначе более длинные группы становятся выше
+   остальных, а flex-контейнер карусели растягивает по высоте все
+   страницы вровень с самой длинной — короткие страницы получают
+   пустое пространство снизу. */
+function chunkPartnerPages(pages: typeof PARTNER_PAGES): { key: string; label: string; items: Partner[] }[] {
+  const out: { key: string; label: string; items: Partner[] }[] = [];
+  for (const page of pages) {
+    for (let i = 0; i < page.items.length; i += PARTNER_PAGE_SIZE) {
+      const chunk = page.items.slice(i, i + PARTNER_PAGE_SIZE);
+      out.push({ key: `${page.label}-${i}`, label: page.label, items: chunk });
+    }
+  }
+  return out;
+}
 
 export const QUICK_ACTIONS_KEY = "mb-quick-actions";
 export const MIN_QUICK_ACTIONS = 3;
@@ -174,7 +203,8 @@ export function PartnersBlock({
   onPick: (p: Partner) => void;
   onAllServices: () => void;
 }) {
-  const { ref, index, onScroll, goTo } = useSnap(PARTNER_PAGES.length);
+  const pages = useMemo(() => chunkPartnerPages(PARTNER_PAGES), []);
+  const { ref, index, onScroll, goTo } = useSnap(pages.length);
 
   return (
     <Reveal>
@@ -186,9 +216,15 @@ export function PartnersBlock({
           </button>
         </div>
 
-        <div ref={ref} onScroll={onScroll} data-hscroll className="no-scrollbar mt-3 flex snap-x snap-mandatory overflow-x-auto">
-          {PARTNER_PAGES.map((page) => (
-            <div key={page.label} className="w-full shrink-0 snap-center px-4">
+        <div
+          ref={ref}
+          onScroll={onScroll}
+          data-hscroll
+          className="no-scrollbar mt-3 flex snap-x snap-mandatory items-start overflow-x-auto transition-[height] duration-300 ease-out"
+          style={{ height: partnerPageHeight(pages[index]?.items.length ?? PARTNER_PAGE_SIZE) }}
+        >
+          {pages.map((page) => (
+            <div key={page.key} className="w-full shrink-0 snap-center px-4">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-faint">{page.label}</p>
               <div className="grid grid-cols-2 gap-2.5">
                 {page.items.map((p) => (
@@ -239,7 +275,7 @@ export function PartnersBlock({
             </div>
           ))}
         </div>
-        <Dots count={PARTNER_PAGES.length} active={index} onPick={goTo} />
+        <Dots count={pages.length} active={index} onPick={goTo} />
       </section>
     </Reveal>
   );

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Icon, type IconName } from "../icons";
 import { Toggle, useToast } from "../ui";
+import { APP_VERSION } from "../version";
 
 /* ============================================================
-   Микросервис «Настройки» · v1.0
+   Микросервис «Настройки»
    Автономный модуль: уведомления, безопасность, данные,
    о приложении. Состояние — в localStorage.
    ============================================================ */
@@ -87,7 +88,6 @@ export default function SettingsService({
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <div>
             <h2 className="font-display text-[17px] font-semibold tracking-tight">Настройки</h2>
-            <p className="text-[11px] font-semibold text-sub">Микросервис · v1.0</p>
           </div>
           <button onClick={onClose} className="press grid h-8 w-8 place-items-center rounded-full bg-card text-sub" aria-label="Закрыть">
             <Icon name="close" className="h-4 w-4" strokeWidth={2.2} />
@@ -196,7 +196,7 @@ export default function SettingsService({
             <ActionRow icon="mail" tint="#ece9ff" label="Поддержка" desc="help@cevba.mos.ru" onClick={() => toast("Чат поддержки откроется в ИИ-агенте", "mail")} />
             <div className="flex items-center justify-between rounded-2xl border border-line/80 bg-card px-3.5 py-3 shadow-card">
               <span className="text-[13px] font-bold">Версия</span>
-              <span className="rounded-full bg-paper px-2.5 py-1 text-[11px] font-extrabold text-sub">2.4.1 (build 2210)</span>
+              <span className="rounded-full bg-paper px-2.5 py-1 text-[11px] font-extrabold text-sub">{APP_VERSION}</span>
             </div>
           </Section>
         </div>
