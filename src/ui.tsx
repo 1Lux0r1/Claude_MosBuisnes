@@ -200,7 +200,7 @@ export function useSnap(count: number) {
   const ref = useRef<HTMLDivElement>(null);
   const raf = useRef(0);
   const [index, setIndex] = useState(0);
-  const drag = useRef<{ startX: number; scrollLeft: number; moved: boolean } | null>(null);
+  const drag = useRef<{ startX: number; scrollLeft: number; moved: boolean; pointerId: number } | null>(null);
 
   useEffect(() => () => window.cancelAnimationFrame(raf.current), []);
 
@@ -222,15 +222,17 @@ export function useSnap(count: number) {
 
   /* Свайп зажатой мышкой — на десктопе, где демонстрируют приложение с
      компьютера, нет тачскрина и нативного скролла свайпом. Работает только
-     для pointerType "mouse" (touch/pen уже скроллятся нативно). Если реально
-     было перетаскивание (сдвиг больше порога), следующий клик по карточке
-     под курсором подавляется — иначе drag открывал бы карточку. */
+     для pointerType "mouse" (touch/pen уже скроллятся нативно). setPointerCapture
+     захватываем не сразу на pointerdown, а только когда сдвиг реально
+     превысил порог — иначе браузер перенаправляет клик на контейнер, и обычный
+     тап по карточке внутри карусели вообще перестаёт открывать её (карточка
+     не получает click). Если перетаскивание всё же было, следующий клик по
+     карточке под курсором подавляется — иначе drag открывал бы карточку. */
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== "mouse") return;
     const el = ref.current;
     if (!el) return;
-    drag.current = { startX: e.clientX, scrollLeft: el.scrollLeft, moved: false };
-    el.setPointerCapture(e.pointerId);
+    drag.current = { startX: e.clientX, scrollLeft: el.scrollLeft, moved: false, pointerId: e.pointerId };
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -238,8 +240,11 @@ export function useSnap(count: number) {
     const el = ref.current;
     if (!d || !el) return;
     const dx = e.clientX - d.startX;
-    if (Math.abs(dx) > 4) d.moved = true;
-    el.scrollLeft = d.scrollLeft - dx;
+    if (!d.moved && Math.abs(dx) > 4) {
+      d.moved = true;
+      el.setPointerCapture(d.pointerId);
+    }
+    if (d.moved) el.scrollLeft = d.scrollLeft - dx;
   };
 
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
