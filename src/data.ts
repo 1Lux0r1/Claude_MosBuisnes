@@ -69,6 +69,8 @@ export interface Partner {
   artFrom: string;
   artTo: string;
   artIcon: IconName;
+  /** Сайт партнёра — кнопка «Перейти» в детальной карточке */
+  url: string;
 }
 
 export type NewsSection = "city" | "industry" | "currency" | "tax";
@@ -243,15 +245,19 @@ export const SERVICE_SECTIONS: ServiceSection[] = [
   { id: "logistics", title: "Логистика", desc: "Доставка, склад, грузоперевозки", icon: "truck", tint: "#ffe4cc", category: "Логистика" },
 ];
 
-export const SERVICE_CATALOG: { id: string; title: string; desc: string; category: string; term: string; icon: string }[] = [
+export const SERVICE_CATALOG: {
+  id: string; title: string; desc: string; category: string; term: string; icon: string;
+  /** Показать кнопку «Заполнить данные из 1С» в форме заявки (только если интеграция подключена) */
+  oneC?: boolean;
+}[] = [
   { id: "s1", title: "Лицензия на торговлю", desc: "Розничная и дистанционная", category: "Разрешения", term: "15 дней", icon: "clipboard" },
   { id: "s2", title: "Согласование перепланировки", desc: "Нежилые помещения", category: "Разрешения", term: "20 дней", icon: "doc" },
-  { id: "s3", title: "Субсидия на оборудование", desc: "До 10 млн ₽ компенсации", category: "Поддержка", term: "10 дней", icon: "coins" },
-  { id: "s4", title: "Грант молодым предпринимателям", desc: "До 500 тыс. ₽", category: "Поддержка", term: "30 дней", icon: "spark" },
+  { id: "s3", title: "Субсидия на оборудование", desc: "До 10 млн ₽ компенсации", category: "Поддержка", term: "10 дней", icon: "coins", oneC: true },
+  { id: "s4", title: "Грант молодым предпринимателям", desc: "До 500 тыс. ₽", category: "Поддержка", term: "30 дней", icon: "spark", oneC: true },
   { id: "s5", title: "Аренда у города", desc: "Ставка от 1 000 ₽/м² в год", category: "Недвижимость", term: "торги", icon: "building" },
   { id: "s6", title: "Выкуп арендуемого имущества", desc: "Преимущественное право МСП", category: "Недвижимость", term: "45 дней", icon: "pin" },
-  { id: "s7", title: "Отчёт по форме МСП", desc: "Автоматическая выгрузка", category: "Отчеты", term: "мгновенно", icon: "chart" },
-  { id: "s8", title: "Данные по отраслям", desc: "API и витрины данных", category: "Отчеты", term: "мгновенно", icon: "chart" },
+  { id: "s7", title: "Отчёт по форме МСП", desc: "Автоматическая выгрузка", category: "Отчеты", term: "мгновенно", icon: "chart", oneC: true },
+  { id: "s8", title: "Данные по отраслям", desc: "API и витрины данных", category: "Отчеты", term: "мгновенно", icon: "chart", oneC: true },
   { id: "s9", title: "Курьерская доставка по Москве", desc: "Партнёрские тарифы, забор в день заказа", category: "Логистика", term: "от 1 дня", icon: "truck" },
   { id: "s10", title: "Складское хранение (фулфилмент)", desc: "Аренда складских мест под товар", category: "Логистика", term: "от 500 ₽/м²/мес", icon: "building" },
   { id: "s11", title: "Логистика для маркетплейсов", desc: "Доставка на склады Ozon, Wildberries, Я.Маркет", category: "Логистика", term: "от 1 дня", icon: "grid" },
@@ -278,6 +284,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Рейтинг 4+ даёт приоритетный показ предложений",
           "Регистрация и участие — бесплатно",
         ],
+        url: "https://zakupki.mos.ru",
       },
       {
         id: "ip", name: "Инвестпортал Москвы", city: true, logo: "ИП", logoBg: "#0a6bff", logoFg: "#ffffff",
@@ -292,6 +299,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Электронные торги без посредников",
           "Приоритет для социального предпринимательства и производства",
         ],
+        url: "https://investmoscow.ru",
       },
       {
         id: "mgf", name: "МосГарантФонд", city: true, logo: "МГ", logoBg: "#0f8f63", logoFg: "#ffffff",
@@ -306,6 +314,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Работает с 30+ банками-партнёрами",
           "Решение по заявке — за 5 рабочих дней",
         ],
+        url: "https://garantfund.mos.ru",
       },
       {
         id: "szn", name: "Служба занятости Москвы", city: true, logo: "СЗ", logoBg: "#6d28d9", logoFg: "#ffffff",
@@ -320,6 +329,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Приоритет при найме молодёжи и людей с инвалидностью",
           "Размещение вакансии на городском портале — от 1 дня",
         ],
+        url: "https://czn.mos.ru",
       },
     ],
   },
@@ -339,6 +349,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Кредит на пополнение оборотных средств — решение за 1 день",
           "Бесплатная бухгалтерия для ИП на первый год",
         ],
+        url: "https://www.sberbank.ru/ru/s_m_business",
       },
       {
         id: "y360", name: "Яндекс 360", logo: "Я", logoBg: "#fff3d4", logoFg: "#b97a00",
@@ -353,6 +364,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Почта на собственном домене компании",
           "Видеозвонки без ограничения по времени",
         ],
+        url: "https://360.yandex.ru",
       },
       {
         id: "tbank", name: "Т-Банк Бизнес", logo: "Т", logoBg: "#fff3d4", logoFg: "#8a6100",
@@ -367,6 +379,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Кэшбэк до 4% на бизнес-расходы",
           "Бесплатные переводы физлицам с расчётного счёта",
         ],
+        url: "https://www.tbank.ru/business/",
       },
       {
         id: "hh", name: "hh.ru для бизнеса", logo: "hh", logoBg: "#fdeceb", logoFg: "#d6231c",
@@ -381,6 +394,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Автоматический подбор кандидатов по вакансии",
           "Продвижение вакансии в топ выдачи — 3 дня бесплатно",
         ],
+        url: "https://hh.ru/employer",
       },
       {
         id: "alfa", name: "АльфаСтрахование", logo: "АС", logoBg: "#fdeceb", logoFg: "#c81e4a",
@@ -395,6 +409,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Оформление полиса онлайн за 15 минут",
           "Выплата по страховому случаю — от 5 рабочих дней",
         ],
+        url: "https://www.alfastrah.ru",
       },
       {
         id: "ozon", name: "Ozon для бизнеса", logo: "OZ", logoBg: "#e6efff", logoFg: "#0a52c9",
@@ -409,6 +424,7 @@ export const PARTNER_PAGES: { label: string; items: Partner[] }[] = [
           "Бесплатное обучение по логистике FBO/FBS",
           "Персональный менеджер на старте продаж",
         ],
+        url: "https://seller.ozon.ru",
       },
     ],
   },
@@ -495,6 +511,68 @@ export function loadConnectedIntegrationIds(): string[] {
     /* повреждённые данные — считаем, что интеграции не подключены */
   }
   return [];
+}
+
+/* ---------- Заявления на услуги ---------- */
+export type AppStatus = "review" | "docs" | "approved" | "rejected" | "draft";
+
+export interface Application {
+  id: string;
+  title: string;
+  /** Название раздела услуг (SERVICE_SECTIONS.title) — не короткая category-метка каталога */
+  service: string;
+  submittedAt: number;
+  deadlineAt: number;
+  status: AppStatus;
+}
+
+/** Название раздела услуг по короткой category-метке каталога — для подписи
+ *  под заявкой в личном кабинете (см. ServicesScreen → ApplyForm). */
+export function sectionTitleForCategory(category: string): string {
+  return SERVICE_SECTIONS.find((s) => s.category === category)?.title ?? category;
+}
+
+function seedApplications(): Application[] {
+  const today = startOfToday().getTime();
+  const day = 86_400_000;
+  const mk = (title: string, service: string, submittedOff: number, deadlineOff: number, status: AppStatus): Application => ({
+    id: `seed-${title}`,
+    title,
+    service,
+    submittedAt: today + submittedOff * day,
+    deadlineAt: today + deadlineOff * day,
+    status,
+  });
+  return [
+    mk("Субсидия на оборудование", "Меры поддержки", -12, 2, "review"),
+    mk("Справка о деятельности", "Услуги и разрешения", -2, 1, "review"),
+    mk("Грант молодым предпринимателям", "Меры поддержки", -6, 5, "docs"),
+    mk("Согласование вывески", "Услуги и разрешения", 0, 14, "draft"),
+    mk("Лицензия на торговлю", "Услуги и разрешения", -30, -3, "approved"),
+    mk("Аренда городского помещения", "Недвижимость", -45, -20, "rejected"),
+  ];
+}
+
+export const APPLICATIONS_STORAGE_KEY = "cevba-applications-v1";
+
+/** Заявки на услуги — читает и пишет ProfileService («Заявления») и форма
+ *  оформления услуги на экране «Услуги». Общий localStorage, чтобы поданная
+ *  заявка сразу появлялась как активная в личном кабинете. */
+export function loadApplications(): Application[] {
+  try {
+    const raw = localStorage.getItem(APPLICATIONS_STORAGE_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    /* повреждённые данные — используем набор по умолчанию */
+  }
+  return seedApplications();
+}
+
+export function saveApplications(list: Application[]): void {
+  localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(list));
 }
 
 /* ---------- Валюты ---------- */
