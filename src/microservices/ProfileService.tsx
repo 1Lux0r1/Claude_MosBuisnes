@@ -603,15 +603,18 @@ export default function ProfileService() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex h-2 overflow-hidden rounded-full bg-paper">
-                  {(["review", "docs", "draft", "approved", "rejected"] as AppStatus[]).map((s) => {
-                    const n = applications.filter((a) => a.status === s).length;
-                    return n ? (
-                      <span key={s} style={{ width: `${(n / applications.length) * 100}%`, background: STATUS_META[s].fg, opacity: s === "rejected" ? 0.45 : 0.9 }} />
-                    ) : null;
-                  })}
+                  {doneCount > 0 && <span style={{ width: `${(doneCount / applications.length) * 100}%`, background: "var(--color-accent)" }} />}
+                  {activeCount > 0 && <span style={{ width: `${(activeCount / applications.length) * 100}%`, background: "var(--color-sub)" }} />}
                 </div>
-                <p className="mt-1.5 text-[11.5px] font-bold text-sub">
-                  <span className="text-warn">{activeCount} активных</span> · {doneCount} выполнено
+                <p className="mt-1.5 flex items-center gap-3 text-[11px] font-bold text-sub">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-accent)" }} />
+                    {doneCount} выполнено
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-sub)" }} />
+                    {activeCount} в работе
+                  </span>
                 </p>
               </div>
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-paper text-sub transition-all group-hover:bg-accent group-hover:text-white">
@@ -837,31 +840,53 @@ function SubView({ title, onBack, children }: { title: string; onBack: () => voi
   );
 }
 
-/* ---------- Заявления: расширенный список (хотбар: Активно / Выполнено) ---------- */
+/* ---------- Заявления: расширенный список — хотбар только с 2 статусами:
+   Выполнено (синий) и В работе (серый), без деления на 5 статусов STATUS_META ---------- */
+const APP_BUCKET_META = {
+  active: { label: "В работе", fg: "var(--color-sub)" },
+  done: { label: "Выполнено", fg: "var(--color-accent)" },
+} as const;
+
 function ApplicationsView({ applications, onBack }: { applications: Application[]; onBack: () => void }) {
   const [filter, setFilter] = useState<"active" | "done">("active");
   const list = applications.filter((a) => (filter === "active" ? isActiveStatus(a.status) : !isActiveStatus(a.status)));
   const activeCount = applications.filter((a) => isActiveStatus(a.status)).length;
+  const doneCount = applications.length - activeCount;
 
   return (
     <SubView title="Заявления организации" onBack={onBack}>
-      <p className="mt-1 text-[12.5px] font-semibold text-sub">
-        Всего {applications.length} · активных {activeCount} · выполнено {applications.length - activeCount}
+      <p className="mt-1 flex items-center gap-3 text-[12.5px] font-semibold text-sub">
+        <span>Всего {applications.length}</span>
+        {(["done", "active"] as const).map((id) => (
+          <span key={id} className="inline-flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: APP_BUCKET_META[id].fg }} />
+            {id === "done" ? doneCount : activeCount} {APP_BUCKET_META[id].label.toLowerCase()}
+          </span>
+        ))}
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-1.5">
-        {([{ id: "active", label: "Активно", n: activeCount }, { id: "done", label: "Выполнено", n: applications.length - activeCount }] as const).map((f) => (
-          <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
-            className={`press flex items-center justify-center gap-1.5 rounded-full py-2 text-[12px] font-extrabold transition-all duration-300 ${
-              filter === f.id ? "bg-ink text-on-ink shadow-card" : "bg-card text-sub shadow-card"
-            }`}
-          >
-            {f.label}
-            <span className={`rounded-full px-1.5 py-px text-[10px] ${filter === f.id ? "bg-on-ink/20" : "bg-paper"}`}>{f.n}</span>
-          </button>
-        ))}
+        {(["active", "done"] as const).map((id) => {
+          const n = id === "active" ? activeCount : doneCount;
+          const m = APP_BUCKET_META[id];
+          const isSel = filter === id;
+          return (
+            <button
+              key={id}
+              onClick={() => setFilter(id)}
+              className="press flex items-center justify-center gap-1.5 rounded-full py-2 text-[12px] font-extrabold shadow-card transition-all duration-300"
+              style={isSel ? { background: m.fg, color: "#fff" } : { background: "var(--color-paper)", color: m.fg }}
+            >
+              {m.label}
+              <span
+                className="rounded-full px-1.5 py-px text-[10px]"
+                style={{ background: isSel ? "rgba(255,255,255,0.25)" : "var(--color-card)" }}
+              >
+                {n}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-3.5 space-y-2.5">
