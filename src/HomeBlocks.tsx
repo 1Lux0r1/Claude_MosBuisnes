@@ -5,9 +5,7 @@ import {
   DEFAULT_QUICK_ACTION_IDS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS,
   type Partner, type QuickAction, type ServiceSection,
 } from "./data";
-import {
-  LIQUIDITY_CARD, PERSONAL_OFFERS, TAX_FORECAST_CARD, type FeatureCard,
-} from "./data/interesting";
+import { LIQUIDITY_CARD, PERSONAL_OFFERS, TAX_FORECAST_CARD } from "./data/interesting";
 import { fmtSupportAmount, supportAvailableTotal, supportMeasuresCount } from "./data/support-measures";
 
 const PARTNER_PAGE_SIZE = 4;
@@ -298,74 +296,50 @@ export function PartnersBlock({
 }
 
 /* ---------- Возможно интересно (п.4) ---------- */
-function FeatureCardView({ card, primary, onAct }: { card: FeatureCard; primary: boolean; onAct: () => void }) {
-  return (
-    <div className="rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
-      <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-ink2-solid" style={{ background: card.tint }}>
-          <Icon name={card.icon} className="h-5 w-5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="text-[13.5px] font-extrabold tracking-tight">{card.title}</p>
-            {card.preliminary && (
-              <span className="shrink-0 rounded-full bg-paper px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-faint">Скоро</span>
-            )}
-          </div>
-          <p className="mt-0.5 text-[11.5px] font-medium leading-snug text-sub">{card.desc}</p>
-        </div>
-      </div>
-      <button
-        onClick={onAct}
-        className={`press mt-3 w-full rounded-full py-2.5 text-[12.5px] font-extrabold ${primary ? "bg-accent text-white" : "bg-paper text-ink2"}`}
-      >
-        {card.action}
-      </button>
-    </div>
-  );
-}
+/* Плитки блока — единый вид (иконка своего цвета, заголовок, кнопка). Собраны
+   из карточек данных interesting.ts: прогнозная модель, персональные
+   предложения, управление ликвидностью. */
+type InterestingTile = { key: string; icon: IconName; tint: string; label: string; title: string; action: string };
+
+const INTERESTING_TILES: InterestingTile[] = [
+  { key: "forecast", icon: TAX_FORECAST_CARD.icon, tint: TAX_FORECAST_CARD.tint, label: TAX_FORECAST_CARD.short, title: TAX_FORECAST_CARD.title, action: TAX_FORECAST_CARD.action },
+  ...PERSONAL_OFFERS.map((o) => ({ key: o.id, icon: o.icon, tint: o.tint, label: o.short, title: o.title, action: o.action })),
+  { key: "liquidity", icon: LIQUIDITY_CARD.icon, tint: LIQUIDITY_CARD.tint, label: LIQUIDITY_CARD.short, title: LIQUIDITY_CARD.title, action: LIQUIDITY_CARD.action },
+];
+
+const INTERESTING_TILE_LIMIT = 3;
 
 export function InterestingBlock() {
   const toast = useToast();
   const stub = (label: string) => toast(`${label} — раздел в разработке`, "spark");
+  const visible = INTERESTING_TILES.slice(0, INTERESTING_TILE_LIMIT);
+  const hasMore = INTERESTING_TILES.length > INTERESTING_TILE_LIMIT;
 
   return (
     <Reveal>
       <section className="px-4">
         <h2 className="font-display text-[15px] font-semibold tracking-tight">Возможно интересно</h2>
-        <div className="mt-3 space-y-2.5">
-          {/* 1. Прогнозная модель налогообложения */}
-          <FeatureCardView card={TAX_FORECAST_CARD} primary onAct={() => stub(TAX_FORECAST_CARD.title)} />
-
-          {/* 2. Персональные предложения — как будто отфильтрованные по тегам профиля */}
-          {PERSONAL_OFFERS.map((o) => (
-            <div key={o.id} className="rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
-              <div className="flex items-start gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-ink2-solid" style={{ background: o.tint }}>
-                  <Icon name={o.icon} className="h-5 w-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13.5px] font-extrabold tracking-tight">{o.title}</p>
-                  <p className="mt-0.5 text-[11.5px] font-medium leading-snug text-sub">{o.desc}</p>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {o.tags.map((t) => (
-                      <span key={t} className="rounded-full bg-paper px-2 py-0.5 text-[9.5px] font-extrabold text-sub">#{t}</span>
-                    ))}
-                  </div>
-                </div>
-                <button
-                  onClick={() => stub(o.title)}
-                  className="press shrink-0 self-center rounded-full bg-accent-soft px-3.5 py-1.5 text-[11.5px] font-extrabold text-accent-deep"
-                >
-                  {o.action}
-                </button>
-              </div>
+        <div className="mt-3 grid grid-cols-3 gap-2.5">
+          {visible.map((t) => (
+            <div key={t.key} className="flex aspect-square flex-col rounded-2xl border border-line/80 bg-card p-2.5 shadow-card">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-ink2-solid" style={{ background: t.tint }}>
+                <Icon name={t.icon} className="h-[18px] w-[18px]" />
+              </span>
+              <span className="mt-2 line-clamp-2 flex-1 text-[11.5px] font-extrabold leading-tight tracking-tight">{t.label}</span>
+              <button
+                onClick={() => stub(t.title)}
+                className="press mt-1 w-full rounded-full bg-accent-soft py-1.5 text-[9.5px] font-extrabold text-accent-deep"
+              >
+                {t.action}
+              </button>
             </div>
           ))}
-
-          {/* 3. Управление ликвидностью — статус предварительный */}
-          <FeatureCardView card={LIQUIDITY_CARD} primary={false} onAct={() => stub(LIQUIDITY_CARD.title)} />
         </div>
+        {hasMore && (
+          <button onClick={() => stub("Все предложения")} className="press mt-2 text-[12px] font-bold text-accent">
+            Показать все
+          </button>
+        )}
       </section>
     </Reveal>
   );
