@@ -10,10 +10,12 @@ import PaymentScreen from "./PaymentScreen";
 
 const fmtRub = (v: number) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(v)} ₽`;
 
-/* Цвет числа даты по производственному календарю: праздник — красный,
-   перенос — чёрный (ink), иначе — переданный fallback (цвет события / обычный). */
+/* Цвет числа даты по производственному календарю: праздник — красный;
+   перенос и обычный выходной внутри блока — чёрный (ink); иначе — переданный
+   fallback (цвет события / обычный день). Красная рамка (в CalendarStrip) —
+   у всех типов из справочника, число красное только у самих праздников. */
 const holidayNumberColor = (hol: HolidayInfo | null, fallback: string) =>
-  hol?.type === "holiday" ? "var(--color-danger)" : hol?.type === "transferred" ? "var(--color-ink)" : fallback;
+  hol?.type === "holiday" ? "var(--color-danger)" : hol ? "var(--color-ink)" : fallback;
 
 /* Заметка о том, что коммерческие платежи партнёров идут через 1С и без
    интеграции не показываются — с кнопкой перехода к подключению. */
