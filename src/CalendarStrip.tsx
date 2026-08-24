@@ -5,9 +5,15 @@ import {
   addDays, dayKey, eventsForDate, eventsForMonth, loadConnectedIntegrationIds, MONTHS, MONTHS_NOM,
   sameDay, sortByTime, startOfToday, WEEKDAYS, type CustomEvent, type DayEvent, type EventKind,
 } from "./data";
+import { holidayFor, type HolidayInfo } from "./data/holidays";
 import PaymentScreen from "./PaymentScreen";
 
 const fmtRub = (v: number) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(v)} ₽`;
+
+/* Цвет числа даты по производственному календарю: праздник — красный,
+   перенос — чёрный (ink), иначе — переданный fallback (цвет события / обычный). */
+const holidayNumberColor = (hol: HolidayInfo | null, fallback: string) =>
+  hol?.type === "holiday" ? "var(--color-danger)" : hol?.type === "transferred" ? "var(--color-ink)" : fallback;
 
 /* Заметка о том, что коммерческие платежи партнёров идут через 1С и без
    интеграции не показываются — с кнопкой перехода к подключению. */
@@ -150,6 +156,7 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
 
   const events = selected ? mergedFor(selected) : [];
   const selMeta = selected ? KIND_META[priority(events) ?? "info"] : null;
+  const selHoliday = selected ? holidayFor(dayKey(selected)) : null;
   const dayTitle = selected
     ? sameDay(selected, today)
       ? "Сегодня"
@@ -210,6 +217,7 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
           const evs = mergedFor(d);
           const kind = priority(evs);
           const meta = kind ? KIND_META[kind] : null;
+          const hol = holidayFor(dayKey(d));
           const active = !!selected && sameDay(d, selected);
           const todayCell = sameDay(d, today);
           return (
@@ -219,13 +227,20 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
               className="press relative flex w-[62px] shrink-0 flex-col items-center rounded-2xl border py-2.5 transition-all duration-300"
               style={{
                 background: active && meta ? meta.bg : meta ? `${meta.bg}aa` : "var(--color-card)",
-                borderColor: todayCell ? "var(--color-ink)" : active ? (meta ? meta.dot : "#0a6bff") : "var(--color-line)",
-                borderWidth: todayCell ? 2.5 : active ? 2 : 1,
+                borderColor: todayCell
+                  ? "var(--color-ink)"
+                  : hol
+                    ? "var(--color-danger)"
+                    : active ? (meta ? meta.dot : "#0a6bff") : "var(--color-line)",
+                borderWidth: todayCell ? 2.5 : hol || active ? 2 : 1,
                 boxShadow: active ? "0 8px 18px -10px rgba(14,18,32,0.35)" : undefined,
               }}
-              aria-label={`${d.getDate()} ${MONTHS[d.getMonth()]}`}
+              aria-label={`${d.getDate()} ${MONTHS[d.getMonth()]}${hol ? ` — ${hol.name}` : ""}`}
             >
-              <span className="font-display text-[16px] font-semibold leading-none" style={{ color: meta?.fg ?? "var(--color-ink)" }}>
+              <span
+                className="font-display text-[16px] font-semibold leading-none"
+                style={{ color: holidayNumberColor(hol, meta?.fg ?? "var(--color-ink)") }}
+              >
                 {d.getDate()}
               </span>
               <span className="mt-1 text-[10px] font-bold uppercase tracking-wide text-sub">
@@ -280,6 +295,16 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
                   </button>
                 </div>
               </div>
+
+              {selHoliday && (
+                <p
+                  className="mt-2.5 flex items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-extrabold"
+                  style={{ background: "var(--color-danger-soft)", color: "var(--color-danger)" }}
+                >
+                  <Icon name="star" className="h-3.5 w-3.5 shrink-0" strokeWidth={2.2} />
+                  {selHoliday.type === "transferred" ? `Выходной · ${selHoliday.name}` : selHoliday.name}
+                </p>
+              )}
 
               {events.length === 0 && !adding ? (
                 <p className="mt-2.5 rounded-xl bg-paper px-3 py-3 text-[12.5px] font-medium leading-relaxed text-sub">
@@ -483,16 +508,25 @@ function MonthSheet({
           const evs = monthEvents.get(dayKey(d)) ?? [];
           const kind = priority(evs);
           const meta = kind ? KIND_META[kind] : null;
+          const hol = holidayFor(dayKey(d));
           const isSel = !!sel && sameDay(d, sel);
           const isToday = sameDay(d, today);
+          const borderCls = isSel ? "" : isToday ? "border-2 border-ink" : hol ? "border-2" : "";
+          const cellStyle: React.CSSProperties = {};
+          if (!isSel && meta) cellStyle.background = meta.bg;
+          if (!isSel) {
+            const c = holidayNumberColor(hol, meta?.fg ?? "");
+            if (c) cellStyle.color = c;
+          }
+          if (!isSel && !isToday && hol) cellStyle.borderColor = "var(--color-danger)";
           return (
             <button
               key={i}
               onClick={() => selectDay(d)}
               className={`press relative mx-auto grid h-10 w-10 place-items-center rounded-xl text-[13px] font-bold transition-colors ${
                 isSel ? "bg-accent text-white" : meta ? "" : "text-ink2 hover:bg-paper"
-              } ${isToday && !isSel ? "border-2 border-ink" : ""}`}
-              style={!isSel && meta ? { background: meta.bg, color: meta.fg } : undefined}
+              } ${borderCls}`}
+              style={Object.keys(cellStyle).length ? cellStyle : undefined}
             >
               {i + 1}
               {evs.length > 0 && !isSel && (
@@ -508,6 +542,18 @@ function MonthSheet({
           <p className="text-[13px] font-extrabold">
             {WEEKDAYS[sel.getDay()]}, {sel.getDate()} {MONTHS[sel.getMonth()]}
           </p>
+          {(() => {
+            const selHol = holidayFor(dayKey(sel));
+            return selHol ? (
+              <p
+                className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-extrabold"
+                style={{ background: "var(--color-danger-soft)", color: "var(--color-danger)" }}
+              >
+                <Icon name="star" className="h-3.5 w-3.5 shrink-0" strokeWidth={2.2} />
+                {selHol.type === "transferred" ? `Выходной · ${selHol.name}` : selHol.name}
+              </p>
+            ) : null;
+          })()}
           {(monthEvents.get(dayKey(sel)) ?? []).length === 0 ? (
             <p className="mt-2 rounded-xl bg-paper px-3 py-3 text-[12.5px] font-medium text-sub">Событий нет — день свободен для задач.</p>
           ) : (
