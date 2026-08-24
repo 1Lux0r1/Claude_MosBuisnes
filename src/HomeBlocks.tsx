@@ -441,22 +441,18 @@ export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
             >
               <Icon name="close" className="h-3.5 w-3.5" strokeWidth={2.2} />
             </button>
-            <div className="flex items-center gap-3 pr-6">
+            <button
+              onClick={() => toast("Продление — раздел в разработке", "refresh")}
+              className="press flex w-full items-center gap-3 pr-6 text-left"
+            >
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-warn-soft text-warn">
                 <Icon name="refresh" className="h-5 w-5" strokeWidth={2} />
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13.5px] font-extrabold tracking-tight">Продлить активность</p>
-                <p className="text-[11.5px] font-semibold leading-snug text-sub">
-                  У вас есть закончившаяся активность — продлите её, чтобы не потерять доступ.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => toast("Продление — раздел в разработке", "refresh")}
-              className="press mt-2.5 w-full rounded-full bg-ink py-2.5 text-[12.5px] font-extrabold text-on-ink"
-            >
-              Продлить
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-extrabold tracking-tight">Продлить активность</span>
+                <span className="block line-clamp-1 text-[11.5px] font-semibold text-sub">Продлите закончившуюся активность</span>
+              </span>
+              <Icon name="arrow-right" className="h-4 w-4 shrink-0 text-sub" strokeWidth={2.2} />
             </button>
           </div>
         )}
