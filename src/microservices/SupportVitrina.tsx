@@ -57,7 +57,7 @@ export default function SupportVitrina() {
   const count = supportMeasuresCount();
 
   return (
-    <section>
+    <section id="vitrina-section" style={{ scrollMarginTop: 12 }}>
       {/* 1. Шапка витрины — светлая подложка, отличная от фона страницы */}
       <div className="rounded-2xl bg-paper p-4">
         <p className="text-[11px] font-bold uppercase tracking-wide text-sub">{VITRINA_HEADER.eyebrow}</p>

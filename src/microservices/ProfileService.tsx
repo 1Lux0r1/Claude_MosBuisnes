@@ -119,9 +119,26 @@ const agoLabel = (ts: number) => {
 
 type View = { t: "root" } | { t: "bankAdd" } | { t: "apps" } | { t: "emp"; id: string };
 
-export default function ProfileService() {
+export default function ProfileService({
+  scrollTo, onScrolled,
+}: {
+  /** Если "vitrina" — при открытии проскроллить к персональной витрине (п.8 → п.7) */
+  scrollTo?: string | null;
+  onScrolled?: () => void;
+} = {}) {
   const toast = useToast();
   const [view, setView] = useState<View>({ t: "root" });
+
+  /* Скролл к витрине по тапу на тизер с Главной. Ждём кадр после монтирования
+     (таб пересоздаётся при переключении), затем прокручиваем секцию в вид. */
+  useEffect(() => {
+    if (scrollTo !== "vitrina") return;
+    const raf = window.requestAnimationFrame(() => {
+      document.getElementById("vitrina-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      onScrolled?.();
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [scrollTo, onScrolled]);
 
   /* --- Финансы: несколько банков одновременно --- */
   const [bankIds, setBankIds] = useState<string[]>(() => loadJSON<string[]>(BANKS_STORAGE_KEY, []));

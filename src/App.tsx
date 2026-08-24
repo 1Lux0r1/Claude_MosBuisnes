@@ -191,12 +191,19 @@ function Shell(props: {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [quickActionIds, setQuickActionIds] = useState<string[]>(loadEnabledQuickActionIds);
   const [quickActionsPickerOpen, setQuickActionsPickerOpen] = useState(false);
+  const [profileScrollTo, setProfileScrollTo] = useState<string | null>(null);
   const eventsBadge = useMemo(() => Math.max(0, 3 - registered.size), [registered]);
 
   const handleLogout = () => {
     setSettingsOpen(false);
     toast("Вы вышли из аккаунта (демо)", "logout");
     onGoTab(0);
+  };
+
+  /* Тизер витрины с Главной: открыть Личный кабинет и проскроллить к витрине */
+  const openVitrina = () => {
+    setProfileScrollTo("vitrina");
+    onGoTab(3);
   };
 
   const toggleQuickAction = (id: string) => {
@@ -258,6 +265,7 @@ function Shell(props: {
                   onNews={(n) => setSheet({ kind: "news", data: n })}
                   onAllNews={() => setSheet({ kind: "newslist" })}
                   onOpenIntegrations={() => onGoTab(3)}
+                  onOpenVitrina={openVitrina}
                 />
               ))}
             {tab === 1 && <ServicesScreen category={servicesCategory} onCategory={setServicesCategory} />}
@@ -272,7 +280,9 @@ function Shell(props: {
                 }}
               />
             )}
-            {tab === 3 && <ProfileService />}
+            {tab === 3 && (
+              <ProfileService scrollTo={profileScrollTo} onScrolled={() => setProfileScrollTo(null)} />
+            )}
           </>
         )}
       </main>
@@ -300,7 +310,7 @@ function Shell(props: {
 
 /* ---------- Главный экран ---------- */
 function HomeScreen({
-  onQuickAction, quickActionIds, onOpenQuickActionsPicker, onSection, onPartner, onAllServices, onNews, onAllNews, onOpenIntegrations,
+  onQuickAction, quickActionIds, onOpenQuickActionsPicker, onSection, onPartner, onAllServices, onNews, onAllNews, onOpenIntegrations, onOpenVitrina,
 }: {
   onQuickAction: (a: QuickAction) => void;
   quickActionIds: string[];
@@ -311,10 +321,11 @@ function HomeScreen({
   onNews: (n: NewsItem) => void;
   onAllNews: () => void;
   onOpenIntegrations: () => void;
+  onOpenVitrina: () => void;
 }) {
   return (
     <div className="space-y-7 pt-4 pb-8">
-      <HomePromos onOpenVitrina={onOpenIntegrations} />
+      <HomePromos onOpenVitrina={onOpenVitrina} />
       <CalendarStrip onOpenIntegrations={onOpenIntegrations} />
       <QuickActions onPick={onQuickAction} enabled={quickActionIds} onOpenPicker={onOpenQuickActionsPicker} />
       <ServiceSections onPick={onSection} />
