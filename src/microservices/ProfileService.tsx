@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, MobiusIcon, type IconName } from "../icons";
 import { Reveal, Toggle, useToast } from "../ui";
 import RequirementsRadar from "./RequirementsRadar";
+import SupportVitrina from "./SupportVitrina";
 import {
   BANKS, BANKS_STORAGE_KEY, INTEGRATIONS_STORAGE_KEY, loadApplications,
   type Application, type AppStatus, type BankAccount, type BankInfo,
@@ -629,6 +630,11 @@ export default function ProfileService() {
       {/* Радар обязательных требований (п.6) — сразу после «Заявлений» */}
       <Reveal delay={150}>
         <RequirementsRadar />
+      </Reveal>
+
+      {/* Персональная витрина «Вам доступно» (п.7) — сразу после Радара */}
+      <Reveal delay={165}>
+        <SupportVitrina />
       </Reveal>
 
       {/* Интеграции учётных систем */}

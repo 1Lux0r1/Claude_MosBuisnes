@@ -75,3 +75,14 @@ export const supportMeasuresCount = (): number => SUPPORT_MEASURES.length;
 /** Формат суммы: 4700000 → «4 700 000 ₽». */
 export const fmtSupportAmount = (v: number): string =>
   `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(v)} ₽`;
+
+/* Статические тексты витрины (п.7) — чтобы вёрстка не держала контент. */
+export const VITRINA_HEADER = {
+  eyebrow: "Вам доступно",
+  profile: "ООО «Ромашка» · МСП · общепит · 2 года на рынке",
+};
+
+export const VITRINA_FOOTER = {
+  allLink: "Все возможности",
+  note: "Подобрано по данным вашего профиля",
+};
