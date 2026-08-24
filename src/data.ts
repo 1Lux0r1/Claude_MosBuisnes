@@ -243,6 +243,7 @@ export const SERVICE_SECTIONS: ServiceSection[] = [
   { id: "realty", title: "Недвижимость", desc: "Аренда, выкуп, торги", icon: "building", tint: "#ece9ff", category: "Недвижимость" },
   { id: "analytics", title: "Отчеты", desc: "Статистика, отчеты, данные", icon: "chart", tint: "#fff3d4", category: "Отчеты" },
   { id: "logistics", title: "Логистика", desc: "Доставка, склад, грузоперевозки", icon: "truck", tint: "#ffe4cc", category: "Логистика" },
+  { id: "commercial", title: "Коммерческие сервисы", desc: "Бухгалтерия, юристы, реклама, IT для бизнеса", icon: "spark", tint: "#e6f7f7", category: "Коммерческие сервисы" },
 ];
 
 export const SERVICE_CATALOG: {
@@ -264,6 +265,11 @@ export const SERVICE_CATALOG: {
   { id: "s12", title: "Грузоперевозки по России", desc: "Автомобильные и ж/д перевозки между городами", category: "Логистика", term: "по расписанию", icon: "truck" },
   { id: "s13", title: "Импорт и растаможка грузов", desc: "Оформление на таможне под ключ", category: "Логистика", term: "5-14 дней", icon: "shield" },
   { id: "s14", title: "Экспресс-доставка «последняя миля»", desc: "До клиента в день заказа", category: "Логистика", term: "2-4 часа", icon: "send" },
+  /* Коммерческие сервисы (п.5) — партнёрские услуги для бизнеса */
+  { id: "c1", title: "Бухгалтерское обслуживание", desc: "Аутсорсинг бухгалтерии и отчётности", category: "Коммерческие сервисы", term: "от 1 дня", icon: "receipt" },
+  { id: "c2", title: "Юридическое сопровождение", desc: "Договоры, споры, регистрация изменений", category: "Коммерческие сервисы", term: "от 1 дня", icon: "shield" },
+  { id: "c3", title: "Реклама и продвижение", desc: "Контекст, таргет, соцсети", category: "Коммерческие сервисы", term: "по запросу", icon: "chart" },
+  { id: "c4", title: "Разработка и IT-подряд", desc: "Сайты, интеграции, автоматизация бизнеса", category: "Коммерческие сервисы", term: "по запросу", icon: "grid" },
 ];
 
 /* ---------- Партнёры ---------- */

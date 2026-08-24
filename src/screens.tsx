@@ -34,6 +34,11 @@ const CATEGORY_FIELDS: Record<string, FieldDef[]> = {
     { key: "to", label: "Адрес назначения", type: "text", placeholder: "Куда доставить" },
     { key: "weight", label: "Вес/объём груза", type: "text", placeholder: "Например: 120 кг" },
   ],
+  "Коммерческие сервисы": [
+    { key: "company", label: "Название организации", type: "text", placeholder: "Например: ООО «Ромашка»" },
+    { key: "task", label: "Что нужно сделать", type: "text", placeholder: "Кратко опишите задачу" },
+    { key: "contact", label: "Контакт для связи", type: "text", placeholder: "Телефон или email" },
+  ],
 };
 
 /* Демо-данные организации из 1С:Предприятие — те же, что показаны в
