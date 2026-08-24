@@ -5,8 +5,8 @@ import AIAssistant from "./AIAssistant";
 import CalendarStrip from "./CalendarStrip";
 import { CurrencyCarousel, NewsCarousel } from "./Carousels";
 import {
-  InterestingBlock, MAX_QUICK_ACTIONS, MIN_QUICK_ACTIONS, PartnersBlock, QUICK_ACTIONS_KEY, QuickActions,
-  QuickActionsPicker, ServiceSections, loadEnabledQuickActionIds,
+  HomePromos, InterestingBlock, MAX_QUICK_ACTIONS, MIN_QUICK_ACTIONS, PartnersBlock, QUICK_ACTIONS_KEY,
+  QuickActions, QuickActionsPicker, ServiceSections, loadEnabledQuickActionIds,
 } from "./HomeBlocks";
 import { EventsScreen, OfflineError, ServicesScreen } from "./screens";
 import ProfileService from "./microservices/ProfileService";
@@ -314,6 +314,7 @@ function HomeScreen({
 }) {
   return (
     <div className="space-y-7 pt-4 pb-8">
+      <HomePromos onOpenVitrina={onOpenIntegrations} />
       <CalendarStrip onOpenIntegrations={onOpenIntegrations} />
       <QuickActions onPick={onQuickAction} enabled={quickActionIds} onOpenPicker={onOpenQuickActionsPicker} />
       <ServiceSections onPick={onSection} />

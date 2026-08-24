@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Icon, type IconName } from "./icons";
 import { Dots, Reveal, Sheet, useSnap, useToast } from "./ui";
 import {
@@ -8,6 +8,7 @@ import {
 import {
   LIQUIDITY_CARD, PERSONAL_OFFERS, TAX_FORECAST_CARD, type FeatureCard,
 } from "./data/interesting";
+import { fmtSupportAmount, supportAvailableTotal, supportMeasuresCount } from "./data/support-measures";
 
 const PARTNER_PAGE_SIZE = 4;
 const PARTNER_CARD_H = 172;
@@ -366,6 +367,100 @@ export function InterestingBlock() {
           <FeatureCardView card={LIQUIDITY_CARD} primary={false} onAct={() => stub(LIQUIDITY_CARD.title)} />
         </div>
       </section>
+    </Reveal>
+  );
+}
+
+/* ---------- Плашки над календарём (п.8, п.9) ---------- */
+const PROMO_VITRINA_KEY = "mb-promo-vitrina-dismissed";
+const PROMO_RENEW_KEY = "mb-promo-renew-dismissed";
+
+const isPromoDismissed = (key: string): boolean => {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+};
+
+/* Тизер витрины (п.8) сверху, «Продлить активность» (п.9) под ним. Каждая
+   закрывается своим крестиком, состояние сохраняется в localStorage — после
+   закрытия плашка не показывается при перезагрузке. */
+export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
+  const toast = useToast();
+  const [showVitrina, setShowVitrina] = useState(() => !isPromoDismissed(PROMO_VITRINA_KEY));
+  const [showRenew, setShowRenew] = useState(() => !isPromoDismissed(PROMO_RENEW_KEY));
+
+  const dismiss = (key: string, set: (v: boolean) => void) => {
+    try {
+      localStorage.setItem(key, "1");
+    } catch {
+      /* приватный режим — просто скрываем на текущую сессию */
+    }
+    set(false);
+  };
+
+  if (!showVitrina && !showRenew) return null;
+
+  const total = fmtSupportAmount(supportAvailableTotal());
+  const count = supportMeasuresCount();
+
+  return (
+    <Reveal>
+      <div className="space-y-2.5 px-4">
+        {/* п.8 — тизер персональной витрины */}
+        {showVitrina && (
+          <div className="relative overflow-hidden rounded-2xl border border-accent/20 bg-accent-soft/60 p-3.5">
+            <button
+              aria-label="Скрыть"
+              onClick={() => dismiss(PROMO_VITRINA_KEY, setShowVitrina)}
+              className="press absolute right-2 top-2 z-10 grid h-6 w-6 place-items-center rounded-full bg-card/70 text-sub"
+            >
+              <Icon name="close" className="h-3.5 w-3.5" strokeWidth={2.2} />
+            </button>
+            <button onClick={onOpenVitrina} className="press flex w-full items-center gap-3 pr-6 text-left">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-card text-accent-deep shadow-card">
+                <Icon name="coins" className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-extrabold tracking-tight text-accent-deep">Вам доступно до {total}</span>
+                <span className="block text-[11.5px] font-semibold text-sub">по {count} мерам поддержки</span>
+              </span>
+              <Icon name="arrow-right" className="h-4 w-4 shrink-0 text-accent-deep" strokeWidth={2.2} />
+            </button>
+          </div>
+        )}
+
+        {/* п.9 — предложение продлить активность */}
+        {showRenew && (
+          <div className="relative overflow-hidden rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
+            <button
+              aria-label="Скрыть"
+              onClick={() => dismiss(PROMO_RENEW_KEY, setShowRenew)}
+              className="press absolute right-2 top-2 z-10 grid h-6 w-6 place-items-center rounded-full bg-paper text-sub"
+            >
+              <Icon name="close" className="h-3.5 w-3.5" strokeWidth={2.2} />
+            </button>
+            <div className="flex items-center gap-3 pr-6">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-warn-soft text-warn">
+                <Icon name="refresh" className="h-5 w-5" strokeWidth={2} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13.5px] font-extrabold tracking-tight">Продлить активность</p>
+                <p className="text-[11.5px] font-semibold leading-snug text-sub">
+                  У вас есть закончившаяся активность — продлите её, чтобы не потерять доступ.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => toast("Продление — раздел в разработке", "refresh")}
+              className="press mt-2.5 w-full rounded-full bg-ink py-2.5 text-[12.5px] font-extrabold text-on-ink"
+            >
+              Продлить
+            </button>
+          </div>
+        )}
+      </div>
     </Reveal>
   );
 }
