@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, MobiusIcon, type IconName } from "../icons";
 import { Reveal, Toggle, useToast } from "../ui";
 import { RequirementsDetail, RequirementsSummary } from "./RequirementsRadar";
-import SupportVitrina from "./SupportVitrina";
+import { VitrinaDetail, VitrinaSummary } from "./SupportVitrina";
 import {
   BANKS, BANKS_STORAGE_KEY, INTEGRATIONS_STORAGE_KEY, loadApplications,
   type Application, type AppStatus, type BankAccount, type BankInfo,
@@ -122,28 +122,24 @@ type View =
   | { t: "bankAdd" }
   | { t: "apps" }
   | { t: "requirements" }
+  | { t: "vitrina" }
   | { t: "emp"; id: string };
 
 export default function ProfileService({
-  scrollTo, onScrolled,
+  openTo, onOpened,
 }: {
-  /** Если "vitrina" — при открытии проскроллить к персональной витрине (п.8 → п.7) */
-  scrollTo?: string | null;
-  onScrolled?: () => void;
+  /** Если "vitrina" — открыть ЛК сразу на странице персональной витрины (тизер п.8 → п.7) */
+  openTo?: string | null;
+  onOpened?: () => void;
 } = {}) {
   const toast = useToast();
-  const [view, setView] = useState<View>({ t: "root" });
+  const [view, setView] = useState<View>(() => (openTo === "vitrina" ? { t: "vitrina" } : { t: "root" }));
 
-  /* Скролл к витрине по тапу на тизер с Главной. Ждём кадр после монтирования
-     (таб пересоздаётся при переключении), затем прокручиваем секцию в вид. */
+  /* Тизер витрины с Главной открывает сразу её страницу; сбрасываем разовое
+     намерение, чтобы обычный заход в ЛК показывал корневой экран. */
   useEffect(() => {
-    if (scrollTo !== "vitrina") return;
-    const raf = window.requestAnimationFrame(() => {
-      document.getElementById("vitrina-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      onScrolled?.();
-    });
-    return () => window.cancelAnimationFrame(raf);
-  }, [scrollTo, onScrolled]);
+    if (openTo) onOpened?.();
+  }, [openTo, onOpened]);
 
   /* --- Финансы: несколько банков одновременно --- */
   const [bankIds, setBankIds] = useState<string[]>(() => loadJSON<string[]>(BANKS_STORAGE_KEY, []));
@@ -391,6 +387,15 @@ export default function ProfileService({
     return (
       <SubView title="Обязательные требования" onBack={() => setView({ t: "root" })}>
         <RequirementsDetail />
+      </SubView>
+    );
+  }
+
+  /* ================= ЭКРАН: персональная витрина ================= */
+  if (view.t === "vitrina") {
+    return (
+      <SubView title="Вам доступно" onBack={() => setView({ t: "root" })}>
+        <VitrinaDetail />
       </SubView>
     );
   }
@@ -663,9 +668,9 @@ export default function ProfileService({
         <RequirementsSummary onOpen={() => setView({ t: "requirements" })} />
       </Reveal>
 
-      {/* Персональная витрина «Вам доступно» (п.7) — сразу после Радара */}
+      {/* Вам доступно (п.7, п.5): компактная сводка → отдельная страница */}
       <Reveal delay={165}>
-        <SupportVitrina />
+        <VitrinaSummary onOpen={() => setView({ t: "vitrina" })} />
       </Reveal>
 
       {/* Интеграции учётных систем */}

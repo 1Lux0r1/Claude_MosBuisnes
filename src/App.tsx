@@ -191,7 +191,7 @@ function Shell(props: {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [quickActionIds, setQuickActionIds] = useState<string[]>(loadEnabledQuickActionIds);
   const [quickActionsPickerOpen, setQuickActionsPickerOpen] = useState(false);
-  const [profileScrollTo, setProfileScrollTo] = useState<string | null>(null);
+  const [profileOpenTo, setProfileOpenTo] = useState<string | null>(null);
   const eventsBadge = useMemo(() => Math.max(0, 3 - registered.size), [registered]);
 
   const handleLogout = () => {
@@ -200,9 +200,9 @@ function Shell(props: {
     onGoTab(0);
   };
 
-  /* Тизер витрины с Главной: открыть Личный кабинет и проскроллить к витрине */
+  /* Тизер витрины с Главной: открыть Личный кабинет сразу на странице витрины */
   const openVitrina = () => {
-    setProfileScrollTo("vitrina");
+    setProfileOpenTo("vitrina");
     onGoTab(3);
   };
 
@@ -281,7 +281,7 @@ function Shell(props: {
               />
             )}
             {tab === 3 && (
-              <ProfileService scrollTo={profileScrollTo} onScrolled={() => setProfileScrollTo(null)} />
+              <ProfileService openTo={profileOpenTo} onOpened={() => setProfileOpenTo(null)} />
             )}
           </>
         )}

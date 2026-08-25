@@ -5,9 +5,11 @@ import {
   supportMeasuresCount, type SupportMeasure, type SupportStatus,
 } from "../data/support-measures";
 
-/* «Персональная витрина "Вам доступно до X ₽"» (п.7). Мобильная раскладка:
-   карточки мер — горизонтальная карусель со свайпом (следующая подглядывает),
-   под ней точки-индикатор. Все кнопки — нерабочие заглушки, контурные. */
+/* «Персональная витрина "Вам доступно"» (п.7, доработка по п.5):
+   - VitrinaSummary — компактная плашка-сводка на странице ЛК (сумма + число
+     мер + переход);
+   - VitrinaDetail — карусель карточек мер на отдельной странице.
+   Все кнопки — нерабочие заглушки, контурные. */
 
 const STATUS_META: Record<SupportStatus, { label: string; fg: string; soft: string }> = {
   approved: { label: "Предварительно одобрено", fg: "var(--color-ok)", soft: "var(--color-ok-soft)" },
@@ -15,6 +17,37 @@ const STATUS_META: Record<SupportStatus, { label: string; fg: string; soft: stri
   locked: { label: "Станет доступно", fg: "var(--color-sub)", soft: "var(--color-paper)" },
 };
 
+/* ---------- Компактная плашка-сводка (страница ЛК) ---------- */
+export function VitrinaSummary({ onOpen }: { onOpen: () => void }) {
+  const total = fmtSupportAmount(supportAvailableTotal());
+  const count = supportMeasuresCount();
+
+  return (
+    <section>
+      <h2 className="flex items-center gap-2 font-display text-[15px] font-semibold tracking-tight">
+        <Icon name="coins" className="h-4 w-4 text-accent" strokeWidth={2.1} />
+        {VITRINA_HEADER.eyebrow}
+      </h2>
+      <button
+        onClick={onOpen}
+        className="press group mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-line/80 bg-card p-3.5 text-left shadow-card transition-all hover:border-accent/40 hover:shadow-float"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span className="font-display text-[22px] font-semibold leading-none tracking-tight">до {total}</span>
+            <span className="text-[12px] font-semibold text-sub">по {count} мерам</span>
+          </p>
+          <p className="mt-1.5 text-[11.5px] font-semibold text-sub">{VITRINA_HEADER.profile}</p>
+        </div>
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-paper text-sub transition-all group-hover:bg-accent group-hover:text-white">
+          <Icon name="arrow-right" className="h-4 w-4" strokeWidth={2.1} />
+        </span>
+      </button>
+    </section>
+  );
+}
+
+/* ---------- Карточка меры ---------- */
 function MeasureCard({ m, onAction }: { m: SupportMeasure; onAction: (label: string) => void }) {
   const meta = STATUS_META[m.status];
   const amountLine = `до ${fmtSupportAmount(m.amount)}${m.deadline ? ` · ${m.deadline}` : ""}`;
@@ -47,7 +80,8 @@ function MeasureCard({ m, onAction }: { m: SupportMeasure; onAction: (label: str
   );
 }
 
-export default function SupportVitrina() {
+/* ---------- Карточки мер (отдельная страница) ---------- */
+export function VitrinaDetail() {
   const toast = useToast();
   const stub = (label: string) => toast(`${label} — раздел в разработке`, "spark");
   const { ref, index, onScroll, goTo, onPointerDown, onPointerMove, onPointerUp, onPointerCancel } =
@@ -57,8 +91,8 @@ export default function SupportVitrina() {
   const count = supportMeasuresCount();
 
   return (
-    <section id="vitrina-section" style={{ scrollMarginTop: 12 }}>
-      {/* 1. Шапка витрины — светлая подложка, отличная от фона страницы */}
+    <div className="mt-3">
+      {/* Шапка витрины — светлая подложка, отличная от фона страницы */}
       <div className="rounded-2xl bg-paper p-4">
         <p className="text-[11px] font-bold uppercase tracking-wide text-sub">{VITRINA_HEADER.eyebrow}</p>
         <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -68,7 +102,7 @@ export default function SupportVitrina() {
         <p className="mt-2 text-[11.5px] font-semibold text-sub">{VITRINA_HEADER.profile}</p>
       </div>
 
-      {/* 2. Карусель карточек мер */}
+      {/* Карусель карточек мер */}
       <div
         ref={ref}
         onScroll={onScroll}
@@ -87,13 +121,13 @@ export default function SupportVitrina() {
       </div>
       <Dots count={SUPPORT_MEASURES.length} active={index} onPick={goTo} />
 
-      {/* 3. Подвал витрины — ссылка, под ней серая строка */}
+      {/* Подвал витрины — ссылка, под ней серая строка */}
       <div className="mt-2">
         <button onClick={() => stub(VITRINA_FOOTER.allLink)} className="press text-[12.5px] font-bold text-accent">
           {VITRINA_FOOTER.allLink} ({count})
         </button>
         <p className="mt-1 text-[11px] font-medium text-faint">{VITRINA_FOOTER.note}</p>
       </div>
-    </section>
+    </div>
   );
 }
