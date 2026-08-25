@@ -72,6 +72,16 @@ export const supportAvailableTotal = (): number =>
 /** Количество мер поддержки — «по N мерам». */
 export const supportMeasuresCount = (): number => SUPPORT_MEASURES.length;
 
+/** По одной мере на каждый статус (для страницы витрины — 3 карточки),
+ *  в порядке approved → needs_info → locked. Итог и количество в шапке
+ *  по-прежнему считаются из полного массива SUPPORT_MEASURES. */
+export const supportMeasuresPerStatus = (): SupportMeasure[] => {
+  const order: SupportStatus[] = ["approved", "needs_info", "locked"];
+  return order
+    .map((s) => SUPPORT_MEASURES.find((m) => m.status === s))
+    .filter((m): m is SupportMeasure => Boolean(m));
+};
+
 /** Формат суммы: 4700000 → «4 700 000 ₽». */
 export const fmtSupportAmount = (v: number): string =>
   `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(v)} ₽`;
