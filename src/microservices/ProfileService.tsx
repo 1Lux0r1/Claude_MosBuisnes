@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, MobiusIcon, type IconName } from "../icons";
 import { Reveal, Toggle, useToast } from "../ui";
-import RequirementsRadar from "./RequirementsRadar";
+import { RequirementsDetail, RequirementsSummary } from "./RequirementsRadar";
 import SupportVitrina from "./SupportVitrina";
 import {
   BANKS, BANKS_STORAGE_KEY, INTEGRATIONS_STORAGE_KEY, loadApplications,
@@ -117,7 +117,12 @@ const agoLabel = (ts: number) => {
   return `${h} ч назад`;
 };
 
-type View = { t: "root" } | { t: "bankAdd" } | { t: "apps" } | { t: "emp"; id: string };
+type View =
+  | { t: "root" }
+  | { t: "bankAdd" }
+  | { t: "apps" }
+  | { t: "requirements" }
+  | { t: "emp"; id: string };
 
 export default function ProfileService({
   scrollTo, onScrolled,
@@ -379,6 +384,15 @@ export default function ProfileService({
   /* ================= ЭКРАН: заявления ================= */
   if (view.t === "apps") {
     return <ApplicationsView applications={applications} onBack={() => setView({ t: "root" })} />;
+  }
+
+  /* ================= ЭКРАН: обязательные требования ================= */
+  if (view.t === "requirements") {
+    return (
+      <SubView title="Обязательные требования" onBack={() => setView({ t: "root" })}>
+        <RequirementsDetail />
+      </SubView>
+    );
   }
 
   /* ================= ЭКРАН: права сотрудника ================= */
@@ -644,9 +658,9 @@ export default function ProfileService({
         </section>
       </Reveal>
 
-      {/* Радар обязательных требований (п.6) — сразу после «Заявлений» */}
+      {/* Обязательные требования (п.6, п.4): компактная сводка → отдельная страница */}
       <Reveal delay={150}>
-        <RequirementsRadar />
+        <RequirementsSummary onOpen={() => setView({ t: "requirements" })} />
       </Reveal>
 
       {/* Персональная витрина «Вам доступно» (п.7) — сразу после Радара */}
