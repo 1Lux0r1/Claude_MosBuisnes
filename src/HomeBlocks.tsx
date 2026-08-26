@@ -345,9 +345,9 @@ export function InterestingBlock() {
   );
 }
 
-/* ---------- Плашки над календарём (п.8, п.9) ---------- */
+/* ---------- Плашки над календарём ---------- */
 const PROMO_VITRINA_KEY = "mb-promo-vitrina-dismissed";
-const PROMO_RENEW_KEY = "mb-promo-renew-dismissed";
+const PROMO_MCHD_KEY = "mb-promo-mchd-dismissed";
 
 const isPromoDismissed = (key: string): boolean => {
   try {
@@ -357,13 +357,13 @@ const isPromoDismissed = (key: string): boolean => {
   }
 };
 
-/* Тизер витрины (п.8) сверху, «Продлить активность» (п.9) под ним. Каждая
+/* Тизер витрины сверху, «Истекает срок действия МЧД» под ним. Каждая
    закрывается своим крестиком, состояние сохраняется в localStorage — после
    закрытия плашка не показывается при перезагрузке. */
 export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
   const toast = useToast();
   const [showVitrina, setShowVitrina] = useState(() => !isPromoDismissed(PROMO_VITRINA_KEY));
-  const [showRenew, setShowRenew] = useState(() => !isPromoDismissed(PROMO_RENEW_KEY));
+  const [showMchd, setShowMchd] = useState(() => !isPromoDismissed(PROMO_MCHD_KEY));
 
   const dismiss = (key: string, set: (v: boolean) => void) => {
     try {
@@ -374,7 +374,7 @@ export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
     set(false);
   };
 
-  if (!showVitrina && !showRenew) return null;
+  if (!showVitrina && !showMchd) return null;
 
   const total = fmtSupportAmount(supportAvailableTotal());
   const count = supportMeasuresCount();
@@ -405,26 +405,26 @@ export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
           </div>
         )}
 
-        {/* п.9 — предложение продлить активность */}
-        {showRenew && (
+        {/* Истекает срок действия МЧД */}
+        {showMchd && (
           <div className="relative overflow-hidden rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
             <button
               aria-label="Скрыть"
-              onClick={() => dismiss(PROMO_RENEW_KEY, setShowRenew)}
+              onClick={() => dismiss(PROMO_MCHD_KEY, setShowMchd)}
               className="press absolute right-2 top-2 z-10 grid h-6 w-6 place-items-center rounded-full bg-paper text-sub"
             >
               <Icon name="close" className="h-3.5 w-3.5" strokeWidth={2.2} />
             </button>
             <button
-              onClick={() => toast("Продление — раздел в разработке", "refresh")}
+              onClick={() => toast("Электронная доверенность — раздел в разработке", "shield")}
               className="press flex w-full items-center gap-3 pr-6 text-left"
             >
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-warn-soft text-warn">
-                <Icon name="refresh" className="h-5 w-5" strokeWidth={2} />
+                <Icon name="clock" className="h-5 w-5" strokeWidth={2} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[13.5px] font-extrabold tracking-tight">Продлить активность</span>
-                <span className="block line-clamp-1 text-[11.5px] font-semibold text-sub">Продлите закончившуюся активность</span>
+                <span className="block text-[13.5px] font-extrabold tracking-tight">Истекает срок действия МЧД</span>
+                <span className="block line-clamp-1 text-[11.5px] font-semibold text-sub">Получить электронную доверенность</span>
               </span>
               <Icon name="arrow-right" className="h-4 w-4 shrink-0 text-sub" strokeWidth={2.2} />
             </button>
