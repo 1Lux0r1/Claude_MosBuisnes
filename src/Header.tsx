@@ -122,7 +122,6 @@ export default function Header({
 
         <div className="relative h-10 min-w-0 flex-1">
           <div className="flex h-full items-center gap-2 rounded-full bg-paper px-3.5 ring-accent/30 transition-shadow focus-within:ring-2">
-            <Icon name="search" className="h-4 w-4 shrink-0 text-faint" strokeWidth={2.1} />
             <input
               ref={inputRef}
               value={query}
@@ -143,6 +142,7 @@ export default function Header({
                 <Icon name="close" className="h-3 w-3" strokeWidth={2.4} />
               </button>
             )}
+            <Icon name="search" className="h-4 w-4 shrink-0 text-faint" strokeWidth={2.1} />
           </div>
         </div>
 
