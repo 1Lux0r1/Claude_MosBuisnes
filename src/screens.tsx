@@ -391,10 +391,19 @@ export function EventsScreen({
       onClick: () => toast("Электронная доверенность — раздел в разработке", "shield"),
     },
   ];
-  /* «Уведомления» — это раздел бывших «Дедлайнов» (kind deadline); плашки видны в нём и в «Все» */
+  /* «Уведомления» (kind deadline) показывают только две плашки, видны в нём и в «Все» */
   const showNotifications = filter === "all" || filter === "deadline";
 
-  const list = filter === "all" ? items : items.filter((x) => x.ev.kind === filter);
+  /* «Сроки» вбирают и critical, и deadline-события — deadline перенесены сюда
+     из «Уведомлений». Сами «Уведомления» событий больше не содержат. */
+  const list =
+    filter === "all"
+      ? items
+      : filter === "critical"
+        ? items.filter((x) => x.ev.kind === "critical" || x.ev.kind === "deadline")
+        : filter === "deadline"
+          ? []
+          : items.filter((x) => x.ev.kind === filter);
   const isEmpty = list.length === 0 && !showNotifications;
 
   return (
