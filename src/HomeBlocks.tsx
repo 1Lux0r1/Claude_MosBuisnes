@@ -40,9 +40,9 @@ function chunkPartnerPages(pages: typeof PARTNER_PAGES): { key: string; label: s
   return out;
 }
 
-/* Название раздела «Предложения партнёров» (п.3 ТЗ). Название предварительное —
-   меняется здесь, в одном месте. */
-export const POSSIBILITIES_SECTION_TITLE = "Возможности";
+/* Название раздела (бывш. «Предложения партнёров» / «Возможности»).
+   Меняется здесь, в одном месте. */
+export const POSSIBILITIES_SECTION_TITLE = "Цифровые сервисы";
 
 export const QUICK_ACTIONS_KEY = "mb-quick-actions";
 export const MIN_QUICK_ACTIONS = 3;
@@ -222,7 +222,7 @@ export function PartnersBlock({
         <div className="flex items-center justify-between px-4">
           <h2 className="font-display text-[15px] font-semibold tracking-tight">{POSSIBILITIES_SECTION_TITLE}</h2>
           <button onClick={onAllServices} className="press shrink-0 text-[12.5px] font-bold text-accent">
-            Все услуги для бизнеса
+            Показать все
           </button>
         </div>
 
