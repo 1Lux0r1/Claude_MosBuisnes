@@ -69,7 +69,7 @@ export const LIQUIDITY_CARD: FeatureCard = {
 };
 
 export const PERSONAL_OFFERS: PersonalOffer[] = [
-  { id: "po1", title: "Курс: продажи на маркетплейсах", short: "Маркетплейсы", desc: "Подобрано по вашей активности в логистике", icon: "grid", tint: "#ece9ff", action: "Смотреть", tags: ["маркетплейсы", "логистика"] },
+  { id: "po1", title: "Курс: продажи на маркетплейсах", short: "Разместиться на маркетплейсе", desc: "Подобрано по вашей активности в логистике", icon: "grid", tint: "#ece9ff", action: "Смотреть", tags: ["маркетплейсы", "логистика"] },
   { id: "po2", title: "Субсидия для общепита", short: "Субсидия", desc: "Похоже на профиль вашей деятельности", icon: "coins", tint: "#e3f6ec", action: "Проверить", tags: ["общепит", "субсидии"] },
   { id: "po3", title: "Юрист по договорам аренды", short: "Юрист", desc: "Часто требуется бизнесу вашего профиля", icon: "shield", tint: "#fff3d4", action: "Подобрать", tags: ["аренда", "юруслуги"] },
 ];
