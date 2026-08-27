@@ -330,7 +330,7 @@ export function InterestingBlock() {
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-ink2-solid" style={{ background: t.tint }}>
                 <Icon name={t.icon} className="h-[18px] w-[18px]" />
               </span>
-              <span className="mt-2 line-clamp-3 flex-1 text-[11.5px] font-extrabold leading-tight tracking-tight">{t.label}</span>
+              <span className="mt-2 line-clamp-3 flex-1 break-words text-[10.5px] font-extrabold leading-tight tracking-tight">{t.label}</span>
             </button>
           ))}
         </div>
