@@ -178,7 +178,7 @@ export function ServiceSections({ onPick }: { onPick: (s: ServiceSection) => voi
     <Reveal>
       <section className="px-4">
         <h2 className="font-display text-[15px] font-semibold leading-snug tracking-tight">
-          Услуги и меры<br />поддержки для бизнеса
+          Услуги и меры поддержки<br />г. Москвы для бизнеса
         </h2>
         <div className="mt-3 space-y-2.5">
           {SERVICE_SECTIONS.map((s, i) => (
