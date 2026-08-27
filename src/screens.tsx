@@ -173,14 +173,14 @@ function ServiceFilter({
     <div className="relative min-w-0 flex-1">
       <button
         onClick={onToggle}
-        className={`press flex w-full items-center justify-between gap-1 rounded-full px-2.5 py-2 text-[11px] font-extrabold transition-colors ${
+        className={`press flex h-9 w-full items-center justify-between gap-0.5 rounded-full px-2 text-[10.5px] font-extrabold transition-colors ${
           active ? "bg-ink text-on-ink" : "bg-card text-sub shadow-card"
         }`}
       >
         <span className="truncate">{active && current ? current.label : name}</span>
         <Icon
           name="chevron-right"
-          className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
+          className={`h-3 w-3 shrink-0 transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
           strokeWidth={2.4}
         />
       </button>
