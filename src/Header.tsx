@@ -115,11 +115,19 @@ export default function Header({
             <Icon name="chevron-left" className="h-5 w-5" strokeWidth={2.1} />
           </button>
         ) : (
-          <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-white shadow-card">
+          <span className="grid h-10 w-10 shrink-0 place-items-center">
             <img
               src={`${import.meta.env.BASE_URL}logo.png`}
               alt="МосБизнес"
               className="h-full w-full object-cover"
+              style={{
+                maskImage:
+                  "linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent)",
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent)",
+                maskComposite: "intersect",
+                WebkitMaskComposite: "source-in",
+              }}
             />
           </span>
         )}
