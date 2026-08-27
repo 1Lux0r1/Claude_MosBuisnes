@@ -6,6 +6,7 @@ import {
   saveApplications, sectionTitleForCategory, startOfToday, type Application, type DayEvent, type EventKind,
   type ServiceAudience,
 } from "./data";
+import { fmtSupportAmount, supportAvailableTotal, supportMeasuresCount } from "./data/support-measures";
 
 type ServiceItem = (typeof SERVICE_CATALOG)[number];
 
@@ -346,11 +347,16 @@ export function ServicesScreen({
 /* ---------- События: ближайшие 7 дней ---------- */
 const KIND_DOT: Record<EventKind, string> = { critical: "#f5333f", deadline: "#f2a900", info: "#0a6bff" };
 
+/* Уведомления из двух верхних плашек Главной — попадают в раздел «Уведомления»
+   (и в «Все»), со стрелками перехода в те же места, куда ведут плашки. */
+type Notification = { id: string; icon: IconName; bg: string; fg: string; title: string; sub: string; onClick: () => void };
+
 export function EventsScreen({
-  registered, onRegister,
+  registered, onRegister, onOpenVitrina,
 }: {
   registered: Set<string>;
   onRegister: (id: string) => void;
+  onOpenVitrina: () => void;
 }) {
   const toast = useToast();
   const [filter, setFilter] = useState<EventKind | "all">("all");
@@ -372,13 +378,30 @@ export function EventsScreen({
     return acc;
   }, []);
 
+  const notifications: Notification[] = [
+    {
+      id: "notif-vitrina", icon: "coins", bg: "var(--color-accent-soft)", fg: "var(--color-accent-deep)",
+      title: `Вам доступно до ${fmtSupportAmount(supportAvailableTotal())}`,
+      sub: `по ${supportMeasuresCount()} мерам поддержки`,
+      onClick: onOpenVitrina,
+    },
+    {
+      id: "notif-mchd", icon: "clock", bg: "var(--color-warn-soft)", fg: "var(--color-warn)",
+      title: "Истекает срок действия МЧД", sub: "Получить электронную доверенность",
+      onClick: () => toast("Электронная доверенность — раздел в разработке", "shield"),
+    },
+  ];
+  /* «Уведомления» — это раздел бывших «Дедлайнов» (kind deadline); плашки видны в нём и в «Все» */
+  const showNotifications = filter === "all" || filter === "deadline";
+
   const list = filter === "all" ? items : items.filter((x) => x.ev.kind === filter);
+  const isEmpty = list.length === 0 && !showNotifications;
 
   return (
     <div className="px-4 pt-4 pb-8">
       <Reveal>
         <h1 className="font-display text-[18px] font-semibold tracking-tight">События</h1>
-        <p className="mt-0.5 text-[12.5px] font-semibold text-sub">Дедлайны и мероприятия на неделю</p>
+        <p className="mt-0.5 text-[12.5px] font-semibold text-sub">Уведомления и мероприятия на неделю</p>
       </Reveal>
 
       <div className="mt-3.5 flex gap-1.5">
@@ -386,7 +409,7 @@ export function EventsScreen({
           [
             { id: "all", label: "Все" },
             { id: "critical", label: "Сроки" },
-            { id: "deadline", label: "Дедлайны" },
+            { id: "deadline", label: "Уведомления" },
             { id: "info", label: "Мероприятия" },
           ] as { id: EventKind | "all"; label: string }[]
         ).map((f) => (
@@ -402,7 +425,7 @@ export function EventsScreen({
         ))}
       </div>
 
-      {list.length === 0 ? (
+      {isEmpty ? (
         <div className="mt-4 rounded-2xl border border-line/80 bg-card shadow-card">
           <EmptyState title="Событий с таким типом нет" hint="Выберите другой фильтр или посмотрите все события недели." />
           <div className="flex justify-center pb-4">
@@ -413,6 +436,24 @@ export function EventsScreen({
         </div>
       ) : (
         <div className="mt-4 space-y-2.5">
+          {showNotifications &&
+            notifications.map((n) => (
+              <Reveal key={n.id}>
+                <button
+                  onClick={n.onClick}
+                  className="press flex w-full items-center gap-3 rounded-2xl border border-line/80 bg-card p-3.5 text-left shadow-card transition-all hover:shadow-float"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: n.bg, color: n.fg }}>
+                    <Icon name={n.icon} className="h-[18px] w-[18px]" strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-extrabold leading-tight tracking-tight">{n.title}</p>
+                    <p className="mt-0.5 text-[11px] font-semibold text-sub">{n.sub}</p>
+                  </div>
+                  <Icon name="arrow-right" className="h-4 w-4 shrink-0 text-sub" strokeWidth={2.2} />
+                </button>
+              </Reveal>
+            ))}
           {list.map((x, i) => {
             const done = registered.has(x.id);
             return (

@@ -278,6 +278,7 @@ function Shell(props: {
                   else next.add(id);
                   setRegistered(next);
                 }}
+                onOpenVitrina={openVitrina}
               />
             )}
             {tab === 3 && (
