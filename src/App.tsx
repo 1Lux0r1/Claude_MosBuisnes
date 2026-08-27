@@ -12,7 +12,7 @@ import { EventsScreen, OfflineError, ServiceFilter, ServicesScreen } from "./scr
 import ProfileService from "./microservices/ProfileService";
 import SettingsService from "./microservices/SettingsService";
 import { HomeSkeleton, Reveal, Sheet, ToastProvider, useToast } from "./ui";
-import { useFavorites } from "./data/favorites";
+import { toggleFavorite, useFavorites } from "./data/favorites";
 import { Icon } from "./icons";
 import {
   NEWS, NEWS_SECTION_META, NEWS_SORT_OPTIONS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS, sortNews,
@@ -529,12 +529,15 @@ function ActionSheetView({
         <div className="mt-4 flex gap-2">
           <button
             onClick={() => {
-              toast("Новость сохранена в закладки", "star");
-              onClose();
+              const added = toggleFavorite(n.id);
+              toast(added ? "Добавлено в избранное" : "Убрано из избранного", "star");
             }}
-            className="press flex-1 rounded-full bg-ink py-2.5 text-[12.5px] font-extrabold text-on-ink"
+            className={`press inline-flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-[12.5px] font-extrabold transition-colors ${
+              favs.has(n.id) ? "bg-accent text-white" : "bg-ink text-on-ink"
+            }`}
           >
-            В закладки
+            <Icon name="star" className={`h-3.5 w-3.5 ${favs.has(n.id) ? "fill-current" : ""}`} strokeWidth={2.2} />
+            {favs.has(n.id) ? "В избранном" : "В избранное"}
           </button>
           <button onClick={onClose} className="press flex-1 rounded-full bg-paper py-2.5 text-[12.5px] font-extrabold text-ink2">
             Закрыть
