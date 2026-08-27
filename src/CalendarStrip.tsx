@@ -61,13 +61,16 @@ function loadCustom(): Record<string, CustomEvent[]> {
    (как состояние закрытых плашек на Главной). Ключ стабилен между днями —
    время + заголовок, чтобы не зависеть от сдвига дат мока. */
 const HIDDEN_KEY = "cevba-hidden-events";
+/* Удалённые события портала («встречи») — как личные события, удаляются
+   насовсем и в «Скрыто» не попадают. Отдельный набор от скрытых. */
+const DELETED_KEY = "cevba-deleted-events";
 const hideKeyOf = (e: DayEvent) => `${e.time}|${e.title}`;
-function loadHidden(): string[] {
+function loadKeys(storageKey: string): string[] {
   try {
-    const arr: unknown = JSON.parse(localStorage.getItem(HIDDEN_KEY) ?? "[]");
+    const arr: unknown = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
     if (Array.isArray(arr) && arr.every((x) => typeof x === "string")) return arr;
   } catch {
-    /* повреждённые данные — считаем, что ничего не скрыто */
+    /* повреждённые данные — считаем набор пустым */
   }
   return [];
 }
@@ -144,7 +147,8 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
   const [selected, setSelected] = useState<Date | null>(null);
   const [monthOpen, setMonthOpen] = useState(false);
   const [custom, setCustom] = useState<Record<string, CustomEvent[]>>(loadCustom);
-  const [hidden, setHidden] = useState<Set<string>>(() => new Set(loadHidden()));
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set(loadKeys(HIDDEN_KEY)));
+  const [deleted, setDeleted] = useState<Set<string>>(() => new Set(loadKeys(DELETED_KEY)));
   const [showHidden, setShowHidden] = useState(false);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState<EventFormValue>({ title: "", time: "12:00", kind: "info" });
@@ -156,8 +160,9 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
      интеграции скрываем их и из ленты, и из месячного календаря. */
   const visibleBase = (evs: DayEvent[]) => (connected1C ? evs : evs.filter((e) => e.payment?.type !== "commercial"));
 
-  /* Портальные события портала, видимые для даты (с учётом 1С и скрытия) */
-  const portalFor = (d: Date) => visibleBase(eventsForDate(d)).filter((e) => !hidden.has(hideKeyOf(e)));
+  /* Портальные события, видимые для даты (с учётом 1С, скрытия и удаления) */
+  const portalFor = (d: Date) =>
+    visibleBase(eventsForDate(d)).filter((e) => !hidden.has(hideKeyOf(e)) && !deleted.has(hideKeyOf(e)));
   const mergedFor = (d: Date): (DayEvent | CustomEvent)[] =>
     sortByTime([...portalFor(d), ...(custom[dayKey(d)] ?? [])]);
 
@@ -179,6 +184,14 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
     next.delete(key);
     persistHidden(next);
     toast("Событие возвращено", "check");
+  };
+
+  /* Удаление события портала («встреча») — насовсем, без возврата */
+  const deletePortalEvent = (e: DayEvent) => {
+    const next = new Set(deleted).add(hideKeyOf(e));
+    setDeleted(next);
+    localStorage.setItem(DELETED_KEY, JSON.stringify([...next]));
+    toast("Событие удалено", "close");
   };
 
   const toggleDay = (d: Date) => {
@@ -379,11 +392,17 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
                             </span>
                           </Main>
                           <button
-                            onClick={() => (isCustom ? deleteEvent((e as CustomEvent).id) : hideEvent(e))}
+                            onClick={() =>
+                              isCustom
+                                ? deleteEvent((e as CustomEvent).id)
+                                : e.kind === "info"
+                                  ? deletePortalEvent(e)
+                                  : hideEvent(e)
+                            }
                             className="press shrink-0 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide"
                             style={{ color: m.fg }}
                           >
-                            {isCustom ? "Удалить" : "Скрыть"}
+                            {isCustom || e.kind === "info" ? "Удалить" : "Скрыть"}
                           </button>
                         </li>
                       );
@@ -455,8 +474,10 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
         onDeleteEvent={removeEvent}
         connected1C={connected1C}
         hidden={hidden}
+        deleted={deleted}
         onHideEvent={hideEvent}
         onRestoreEvent={restoreEvent}
+        onDeletePortal={deletePortalEvent}
         onOpenIntegrations={onOpenIntegrations}
         onOpenPayment={(date, event) => setPayment({ date, event })}
       />
@@ -474,7 +495,7 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
 
 /* ---------- Полный месяц ---------- */
 function MonthSheet({
-  open, onClose, custom, onAddEvent, onDeleteEvent, connected1C, hidden, onHideEvent, onRestoreEvent, onOpenIntegrations, onOpenPayment,
+  open, onClose, custom, onAddEvent, onDeleteEvent, connected1C, hidden, deleted, onHideEvent, onRestoreEvent, onDeletePortal, onOpenIntegrations, onOpenPayment,
 }: {
   open: boolean;
   onClose: () => void;
@@ -483,8 +504,10 @@ function MonthSheet({
   onDeleteEvent: (key: string, id: string) => void;
   connected1C: boolean;
   hidden: Set<string>;
+  deleted: Set<string>;
   onHideEvent: (e: DayEvent) => void;
   onRestoreEvent: (key: string) => void;
+  onDeletePortal: (e: DayEvent) => void;
   onOpenIntegrations: () => void;
   onOpenPayment: (date: Date, event: DayEvent) => void;
 }) {
@@ -520,7 +543,7 @@ function MonthSheet({
     const merged = new Map<string, (DayEvent | CustomEvent)[]>();
     base.forEach((evs, key) => {
       const visible = (connected1C ? evs : evs.filter((e) => e.payment?.type !== "commercial")).filter(
-        (e) => !hidden.has(hideKeyOf(e)),
+        (e) => !hidden.has(hideKeyOf(e)) && !deleted.has(hideKeyOf(e)),
       );
       if (visible.length) merged.set(key, visible);
     });
@@ -528,7 +551,7 @@ function MonthSheet({
       merged.set(key, sortByTime([...(merged.get(key) ?? []), ...evs]));
     });
     return merged;
-  }, [view, custom, connected1C, hidden]);
+  }, [view, custom, connected1C, hidden, deleted]);
 
   const hiddenForSel = sel
     ? (connected1C ? eventsForDate(sel) : eventsForDate(sel).filter((e) => e.payment?.type !== "commercial")).filter(
@@ -645,11 +668,17 @@ function MonthSheet({
                       </span>
                     </Main>
                     <button
-                      onClick={() => (isCustom ? onDeleteEvent(dayKey(sel), (e as CustomEvent).id) : onHideEvent(e))}
+                      onClick={() =>
+                        isCustom
+                          ? onDeleteEvent(dayKey(sel), (e as CustomEvent).id)
+                          : e.kind === "info"
+                            ? onDeletePortal(e)
+                            : onHideEvent(e)
+                      }
                       className="press shrink-0 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide"
                       style={{ color: m.fg }}
                     >
-                      {isCustom ? "Удалить" : "Скрыть"}
+                      {isCustom || e.kind === "info" ? "Удалить" : "Скрыть"}
                     </button>
                   </li>
                 );
