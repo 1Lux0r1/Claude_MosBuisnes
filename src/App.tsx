@@ -12,6 +12,7 @@ import { EventsScreen, OfflineError, ServiceFilter, ServicesScreen } from "./scr
 import ProfileService from "./microservices/ProfileService";
 import SettingsService from "./microservices/SettingsService";
 import { HomeSkeleton, Reveal, Sheet, ToastProvider, useToast } from "./ui";
+import { useFavorites } from "./data/favorites";
 import { Icon } from "./icons";
 import {
   NEWS, NEWS_SECTION_META, NEWS_SORT_OPTIONS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS, sortNews,
@@ -355,6 +356,8 @@ function ActionSheetView({
   const [newsFilter, setNewsFilter] = useState<NewsSection | "all">("all");
   const [newsSort, setNewsSort] = useState<NewsSort>("new");
   const [sortOpen, setSortOpen] = useState(false);
+  const [favView, setFavView] = useState(false);
+  const favs = useFavorites();
   const sortRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!sortOpen) return;
@@ -368,10 +371,8 @@ function ActionSheetView({
   if (!sheet) return null;
 
   if (sheet.kind === "newslist") {
-    const filtered = sortNews(
-      newsFilter === "all" ? NEWS : NEWS.filter((n) => n.section === newsFilter),
-      newsSort,
-    );
+    const base = newsFilter === "all" ? NEWS : NEWS.filter((n) => n.section === newsFilter);
+    const filtered = sortNews(favView ? base.filter((n) => favs.has(n.id)) : base, newsSort);
     const sortLabel = NEWS_SORT_OPTIONS.find((o) => o.value === newsSort)?.label.toLowerCase() ?? "";
 
     return (
@@ -409,6 +410,22 @@ function ActionSheetView({
             ))}
           </div>
           <div ref={sortRef} className="flex items-center gap-1.5 px-4 pb-3">
+            <div className="flex h-9 shrink-0 items-center rounded-full bg-card p-0.5 shadow-card">
+              {([
+                { v: false, label: "Все" },
+                { v: true, label: "Избранное" },
+              ] as const).map((o) => (
+                <button
+                  key={o.label}
+                  onClick={() => setFavView(o.v)}
+                  className={`press h-full rounded-full px-3 text-[11px] font-extrabold transition-colors ${
+                    favView === o.v ? "bg-ink text-on-ink" : "text-sub"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
             <ServiceFilter
               name="Сортировка"
               value={newsSort}
@@ -427,7 +444,23 @@ function ActionSheetView({
 
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-4">
           {filtered.length === 0 ? (
-            <p className="mt-10 text-center text-[12.5px] font-semibold text-sub">В этом направлении пока нет новостей</p>
+            favView ? (
+              favs.size === 0 ? (
+                <div className="mt-10 flex flex-col items-center px-8 text-center">
+                  <span className="grid h-14 w-14 place-items-center rounded-3xl bg-card text-faint shadow-card">
+                    <Icon name="star" className="h-7 w-7" strokeWidth={1.7} />
+                  </span>
+                  <p className="mt-3 text-[14px] font-extrabold">В избранном пока пусто</p>
+                  <p className="mt-1 text-[12.5px] font-medium leading-relaxed text-sub">
+                    Добавляйте новости в избранное через меню карточки (три точки) → «В избранное» или кнопкой «В избранное» на экране новости.
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-10 text-center text-[12.5px] font-semibold text-sub">В этом направлении нет избранных новостей</p>
+              )
+            ) : (
+              <p className="mt-10 text-center text-[12.5px] font-semibold text-sub">В этом направлении пока нет новостей</p>
+            )
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {filtered.map((n) => (
