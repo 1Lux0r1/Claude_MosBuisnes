@@ -56,6 +56,22 @@ function loadCustom(): Record<string, CustomEvent[]> {
   }
 }
 
+/* Скрытые события портала. Скрытие не удаляет событие из данных, а прячет его
+   из карточки дня, ленты и месяца; сохраняется между сессиями в localStorage
+   (как состояние закрытых плашек на Главной). Ключ стабилен между днями —
+   время + заголовок, чтобы не зависеть от сдвига дат мока. */
+const HIDDEN_KEY = "cevba-hidden-events";
+const hideKeyOf = (e: DayEvent) => `${e.time}|${e.title}`;
+function loadHidden(): string[] {
+  try {
+    const arr: unknown = JSON.parse(localStorage.getItem(HIDDEN_KEY) ?? "[]");
+    if (Array.isArray(arr) && arr.every((x) => typeof x === "string")) return arr;
+  } catch {
+    /* повреждённые данные — считаем, что ничего не скрыто */
+  }
+  return [];
+}
+
 type EventFormValue = { title: string; time: string; kind: EventKind };
 
 /* Форма добавления события — используется и в мини-ленте, и в полном календаре */
@@ -128,6 +144,8 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
   const [selected, setSelected] = useState<Date | null>(null);
   const [monthOpen, setMonthOpen] = useState(false);
   const [custom, setCustom] = useState<Record<string, CustomEvent[]>>(loadCustom);
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set(loadHidden()));
+  const [showHidden, setShowHidden] = useState(false);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState<EventFormValue>({ title: "", time: "12:00", kind: "info" });
   const [formError, setFormError] = useState(false);
@@ -138,15 +156,33 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
      интеграции скрываем их и из ленты, и из месячного календаря. */
   const visibleBase = (evs: DayEvent[]) => (connected1C ? evs : evs.filter((e) => e.payment?.type !== "commercial"));
 
+  /* Портальные события портала, видимые для даты (с учётом 1С и скрытия) */
+  const portalFor = (d: Date) => visibleBase(eventsForDate(d)).filter((e) => !hidden.has(hideKeyOf(e)));
   const mergedFor = (d: Date): (DayEvent | CustomEvent)[] =>
-    sortByTime([...visibleBase(eventsForDate(d)), ...(custom[dayKey(d)] ?? [])]);
+    sortByTime([...portalFor(d), ...(custom[dayKey(d)] ?? [])]);
 
   const persist = (next: Record<string, CustomEvent[]>) => {
     setCustom(next);
     localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
   };
 
+  const persistHidden = (next: Set<string>) => {
+    setHidden(next);
+    localStorage.setItem(HIDDEN_KEY, JSON.stringify([...next]));
+  };
+  const hideEvent = (e: DayEvent) => {
+    persistHidden(new Set(hidden).add(hideKeyOf(e)));
+    toast("Событие скрыто", "eye-off");
+  };
+  const restoreEvent = (key: string) => {
+    const next = new Set(hidden);
+    next.delete(key);
+    persistHidden(next);
+    toast("Событие возвращено", "check");
+  };
+
   const toggleDay = (d: Date) => {
+    setShowHidden(false);
     if (selected && sameDay(d, selected)) {
       setSelected(null);
       setAdding(false);
@@ -159,6 +195,7 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
   const events = selected ? mergedFor(selected) : [];
   const selMeta = selected ? KIND_META[priority(events) ?? "info"] : null;
   const selHoliday = selected ? holidayFor(dayKey(selected)) : null;
+  const hiddenForDay = selected ? visibleBase(eventsForDate(selected)).filter((e) => hidden.has(hideKeyOf(e))) : [];
   const dayTitle = selected
     ? sameDay(selected, today)
       ? "Сегодня"
@@ -308,7 +345,7 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
                 </p>
               )}
 
-              {events.length === 0 && !adding ? (
+              {events.length === 0 && !adding && hiddenForDay.length === 0 ? (
                 <p className="mt-2.5 rounded-xl bg-paper px-3 py-3 text-[12.5px] font-medium leading-relaxed text-sub">
                   На эту дату событий нет — день свободен для задач.
                 </p>
@@ -318,13 +355,13 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
                     {events.map((e, i) => {
                       const m = KIND_META[e.kind];
                       const pay = e.payment;
-                      const Row = pay ? "button" : "div";
+                      const isCustom = "custom" in e;
+                      const Main = pay ? "button" : "div";
                       return (
-                        <li key={i}>
-                          <Row
+                        <li key={i} className="flex items-center gap-2 rounded-xl px-2.5 py-2" style={{ background: m.bg }}>
+                          <Main
                             {...(pay ? { onClick: () => setPayment({ event: e, date: selected! }) } : {})}
-                            className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left ${pay ? "press transition-colors hover:brightness-95" : ""}`}
-                            style={{ background: m.bg }}
+                            className={`flex min-w-0 flex-1 items-center gap-3 text-left ${pay ? "press transition-colors hover:brightness-95" : ""}`}
                           >
                             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/85" style={{ color: m.fg }}>
                               <Icon
@@ -340,30 +377,44 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
                                 {pay ? <span className="truncate">· {fmtRub(pay.amount)}</span> : e.place && <span className="truncate">· {e.place}</span>}
                               </span>
                             </span>
-                            {"custom" in e && !pay && (
-                              <button
-                                onClick={() => deleteEvent(e.id)}
-                                className="press grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/85 text-ink2-solid"
-                                aria-label="Удалить событие"
-                              >
-                                <Icon name="close" className="h-3 w-3" strokeWidth={2.4} />
-                              </button>
-                            )}
-                            {pay ? (
-                              <span className="shrink-0" style={{ color: m.fg }}>
-                                <Icon name="chevron-right" className="h-4 w-4" strokeWidth={2.2} />
-                              </span>
-                            ) : (
-                              <span className="shrink-0 rounded-full bg-white/85 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide" style={{ color: m.fg }}>
-                                {m.label}
-                              </span>
-                            )}
-                          </Row>
+                          </Main>
+                          <button
+                            onClick={() => (isCustom ? deleteEvent((e as CustomEvent).id) : hideEvent(e))}
+                            className="press shrink-0 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide"
+                            style={{ color: m.fg }}
+                          >
+                            {isCustom ? "Удалить" : "Скрыть"}
+                          </button>
                         </li>
                       );
                     })}
                   </ul>
                 )
+              )}
+
+              {hiddenForDay.length > 0 && (
+                <div className="mt-2.5">
+                  <button onClick={() => setShowHidden((v) => !v)} className="press flex items-center gap-1.5 text-[11px] font-bold text-sub">
+                    <Icon name="eye-off" className="h-3.5 w-3.5" strokeWidth={2} />
+                    Скрыто: {hiddenForDay.length}
+                    <Icon name="chevron-right" className={`h-3.5 w-3.5 transition-transform ${showHidden ? "rotate-90" : ""}`} strokeWidth={2.2} />
+                  </button>
+                  {showHidden && (
+                    <ul className="mt-1.5 space-y-1.5">
+                      {hiddenForDay.map((e) => (
+                        <li key={hideKeyOf(e)} className="flex items-center gap-2 rounded-xl bg-paper px-2.5 py-2">
+                          <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-sub">{e.time} · {e.title}</span>
+                          <button
+                            onClick={() => restoreEvent(hideKeyOf(e))}
+                            className="press shrink-0 rounded-full bg-card px-2.5 py-1 text-[10px] font-extrabold text-accent shadow-card"
+                          >
+                            Вернуть
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
 
               {/* Добавить событие */}
@@ -403,6 +454,9 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
         onAddEvent={addEvent}
         onDeleteEvent={removeEvent}
         connected1C={connected1C}
+        hidden={hidden}
+        onHideEvent={hideEvent}
+        onRestoreEvent={restoreEvent}
         onOpenIntegrations={onOpenIntegrations}
         onOpenPayment={(date, event) => setPayment({ date, event })}
       />
@@ -420,7 +474,7 @@ export default function CalendarStrip({ onOpenIntegrations }: { onOpenIntegratio
 
 /* ---------- Полный месяц ---------- */
 function MonthSheet({
-  open, onClose, custom, onAddEvent, onDeleteEvent, connected1C, onOpenIntegrations, onOpenPayment,
+  open, onClose, custom, onAddEvent, onDeleteEvent, connected1C, hidden, onHideEvent, onRestoreEvent, onOpenIntegrations, onOpenPayment,
 }: {
   open: boolean;
   onClose: () => void;
@@ -428,6 +482,9 @@ function MonthSheet({
   onAddEvent: (key: string, ev: CustomEvent) => void;
   onDeleteEvent: (key: string, id: string) => void;
   connected1C: boolean;
+  hidden: Set<string>;
+  onHideEvent: (e: DayEvent) => void;
+  onRestoreEvent: (key: string) => void;
   onOpenIntegrations: () => void;
   onOpenPayment: (date: Date, event: DayEvent) => void;
 }) {
@@ -435,12 +492,14 @@ function MonthSheet({
   const [view, setView] = useState(() => ({ y: today.getFullYear(), m: today.getMonth() }));
   const [sel, setSel] = useState<Date | null>(null);
   const [adding, setAdding] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
   const [form, setForm] = useState<EventFormValue>({ title: "", time: "12:00", kind: "info" });
   const [formError, setFormError] = useState(false);
 
   const selectDay = (d: Date) => {
     setSel(d);
     setAdding(false);
+    setShowHidden(false);
     setFormError(false);
   };
 
@@ -460,14 +519,22 @@ function MonthSheet({
     const base = eventsForMonth(view.y, view.m);
     const merged = new Map<string, (DayEvent | CustomEvent)[]>();
     base.forEach((evs, key) => {
-      const visible = connected1C ? evs : evs.filter((e) => e.payment?.type !== "commercial");
+      const visible = (connected1C ? evs : evs.filter((e) => e.payment?.type !== "commercial")).filter(
+        (e) => !hidden.has(hideKeyOf(e)),
+      );
       if (visible.length) merged.set(key, visible);
     });
     Object.entries(custom).forEach(([key, evs]) => {
       merged.set(key, sortByTime([...(merged.get(key) ?? []), ...evs]));
     });
     return merged;
-  }, [view, custom, connected1C]);
+  }, [view, custom, connected1C, hidden]);
+
+  const hiddenForSel = sel
+    ? (connected1C ? eventsForDate(sel) : eventsForDate(sel).filter((e) => e.payment?.type !== "commercial")).filter(
+        (e) => hidden.has(hideKeyOf(e)),
+      )
+    : [];
 
   const offset = (new Date(view.y, view.m, 1).getDay() + 6) % 7;
   const daysIn = new Date(view.y, view.m + 1, 0).getDate();
@@ -556,50 +623,63 @@ function MonthSheet({
               </p>
             ) : null;
           })()}
-          {(monthEvents.get(dayKey(sel)) ?? []).length === 0 ? (
+          {(monthEvents.get(dayKey(sel)) ?? []).length === 0 && hiddenForSel.length === 0 ? (
             <p className="mt-2 rounded-xl bg-paper px-3 py-3 text-[12.5px] font-medium text-sub">Событий нет — день свободен для задач.</p>
           ) : (
             <ul className="mt-2 space-y-1.5">
               {(monthEvents.get(dayKey(sel)) ?? []).map((e, i) => {
                 const m = KIND_META[e.kind];
                 const pay = e.payment;
-                const Row = pay ? "button" : "div";
+                const isCustom = "custom" in e;
+                const Main = pay ? "button" : "div";
                 return (
-                  <li key={i}>
-                    <Row
+                  <li key={i} className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: m.bg }}>
+                    <Main
                       {...(pay ? { onClick: () => onOpenPayment(sel, e) } : {})}
-                      className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left ${pay ? "press transition-colors hover:brightness-95" : ""}`}
-                      style={{ background: m.bg }}
+                      className={`flex min-w-0 flex-1 items-center gap-2.5 text-left ${pay ? "press transition-colors hover:brightness-95" : ""}`}
                     >
                       <span className="text-[11.5px] font-extrabold" style={{ color: m.fg }}>{e.time}</span>
                       <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-ink-solid">
                         {e.title}
                         {pay && <span className="ml-1.5 font-semibold text-ink-solid/55">· {fmtRub(pay.amount)}</span>}
                       </span>
-                      {"custom" in e && !pay && (
-                        <>
-                          <span className="shrink-0 text-[9.5px] font-extrabold uppercase tracking-wide text-ink-solid/55">личное</span>
-                          <button
-                            onClick={() => onDeleteEvent(dayKey(sel), e.id)}
-                            className="press grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/85 text-ink2-solid"
-                            aria-label="Удалить событие"
-                          >
-                            <Icon name="close" className="h-3 w-3" strokeWidth={2.4} />
-                          </button>
-                        </>
-                      )}
-                      {pay ? (
-                        <span className="shrink-0" style={{ color: m.fg }}>
-                          <Icon name="chevron-right" className="h-4 w-4" strokeWidth={2.2} />
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-extrabold uppercase" style={{ color: m.fg }}>{m.label}</span>
-                      )}
-                    </Row>
+                    </Main>
+                    <button
+                      onClick={() => (isCustom ? onDeleteEvent(dayKey(sel), (e as CustomEvent).id) : onHideEvent(e))}
+                      className="press shrink-0 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide"
+                      style={{ color: m.fg }}
+                    >
+                      {isCustom ? "Удалить" : "Скрыть"}
+                    </button>
                   </li>
                 );
               })}
             </ul>
+          )}
+
+          {hiddenForSel.length > 0 && (
+            <div className="mt-2">
+              <button onClick={() => setShowHidden((v) => !v)} className="press flex items-center gap-1.5 text-[11px] font-bold text-sub">
+                <Icon name="eye-off" className="h-3.5 w-3.5" strokeWidth={2} />
+                Скрыто: {hiddenForSel.length}
+                <Icon name="chevron-right" className={`h-3.5 w-3.5 transition-transform ${showHidden ? "rotate-90" : ""}`} strokeWidth={2.2} />
+              </button>
+              {showHidden && (
+                <ul className="mt-1.5 space-y-1.5">
+                  {hiddenForSel.map((e) => (
+                    <li key={hideKeyOf(e)} className="flex items-center gap-2 rounded-xl bg-paper px-3 py-2">
+                      <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-sub">{e.time} · {e.title}</span>
+                      <button
+                        onClick={() => onRestoreEvent(hideKeyOf(e))}
+                        className="press shrink-0 rounded-full bg-card px-2.5 py-1 text-[10px] font-extrabold text-accent shadow-card"
+                      >
+                        Вернуть
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
 
           {/* Добавить событие — доступно и если на дату уже есть события */}
