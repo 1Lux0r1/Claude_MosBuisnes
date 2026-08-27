@@ -246,30 +246,38 @@ export const SERVICE_SECTIONS: ServiceSection[] = [
   { id: "commercial", title: "Коммерческие сервисы", desc: "Бухгалтерия, юристы, реклама, IT для бизнеса", icon: "spark", tint: "#e6f7f7", category: "Коммерческие сервисы" },
 ];
 
+/* Кому подходит услуга — значения фильтра «Кому подходит» на экране «Услуги» */
+export type ServiceAudience = "Физлицо" | "Самозанятый" | "ИП" | "ООО";
+export const SERVICE_AUDIENCES: ServiceAudience[] = ["Физлицо", "Самозанятый", "ИП", "ООО"];
+
 export const SERVICE_CATALOG: {
   id: string; title: string; desc: string; category: string; term: string; icon: string;
+  /** Тип услуги — фильтр «Тип услуги»: city (Городские) / commercial (Коммерческие) */
+  serviceType: "city" | "commercial";
+  /** Кому подходит — фильтр «Кому подходит» */
+  audience: ServiceAudience[];
   /** Показать кнопку «Заполнить данные из 1С» в форме заявки (только если интеграция подключена) */
   oneC?: boolean;
 }[] = [
-  { id: "s1", title: "Лицензия на торговлю", desc: "Розничная и дистанционная", category: "Разрешения", term: "15 дней", icon: "clipboard" },
-  { id: "s2", title: "Согласование перепланировки", desc: "Нежилые помещения", category: "Разрешения", term: "20 дней", icon: "doc" },
-  { id: "s3", title: "Субсидия на оборудование", desc: "До 10 млн ₽ компенсации", category: "Поддержка", term: "10 дней", icon: "coins", oneC: true },
-  { id: "s4", title: "Грант молодым предпринимателям", desc: "До 500 тыс. ₽", category: "Поддержка", term: "30 дней", icon: "spark", oneC: true },
-  { id: "s5", title: "Аренда у города", desc: "Ставка от 1 000 ₽/м² в год", category: "Недвижимость", term: "торги", icon: "building" },
-  { id: "s6", title: "Выкуп арендуемого имущества", desc: "Преимущественное право МСП", category: "Недвижимость", term: "45 дней", icon: "pin" },
-  { id: "s7", title: "Отчёт по форме МСП", desc: "Автоматическая выгрузка", category: "Отчеты", term: "мгновенно", icon: "chart", oneC: true },
-  { id: "s8", title: "Данные по отраслям", desc: "API и витрины данных", category: "Отчеты", term: "мгновенно", icon: "chart", oneC: true },
-  { id: "s9", title: "Курьерская доставка по Москве", desc: "Партнёрские тарифы, забор в день заказа", category: "Логистика", term: "от 1 дня", icon: "truck" },
-  { id: "s10", title: "Складское хранение (фулфилмент)", desc: "Аренда складских мест под товар", category: "Логистика", term: "от 500 ₽/м²/мес", icon: "building" },
-  { id: "s11", title: "Логистика для маркетплейсов", desc: "Доставка на склады Ozon, Wildberries, Я.Маркет", category: "Логистика", term: "от 1 дня", icon: "grid" },
-  { id: "s12", title: "Грузоперевозки по России", desc: "Автомобильные и ж/д перевозки между городами", category: "Логистика", term: "по расписанию", icon: "truck" },
-  { id: "s13", title: "Импорт и растаможка грузов", desc: "Оформление на таможне под ключ", category: "Логистика", term: "5-14 дней", icon: "shield" },
-  { id: "s14", title: "Экспресс-доставка «последняя миля»", desc: "До клиента в день заказа", category: "Логистика", term: "2-4 часа", icon: "send" },
+  { id: "s1", title: "Лицензия на торговлю", desc: "Розничная и дистанционная", category: "Разрешения", term: "15 дней", icon: "clipboard", serviceType: "city", audience: ["ИП", "ООО"] },
+  { id: "s2", title: "Согласование перепланировки", desc: "Нежилые помещения", category: "Разрешения", term: "20 дней", icon: "doc", serviceType: "city", audience: ["ИП", "ООО"] },
+  { id: "s3", title: "Субсидия на оборудование", desc: "До 10 млн ₽ компенсации", category: "Поддержка", term: "10 дней", icon: "coins", serviceType: "city", audience: ["ИП", "ООО"], oneC: true },
+  { id: "s4", title: "Грант молодым предпринимателям", desc: "До 500 тыс. ₽", category: "Поддержка", term: "30 дней", icon: "spark", serviceType: "city", audience: ["Самозанятый", "ИП", "ООО"], oneC: true },
+  { id: "s5", title: "Аренда у города", desc: "Ставка от 1 000 ₽/м² в год", category: "Недвижимость", term: "торги", icon: "building", serviceType: "city", audience: ["ИП", "ООО"] },
+  { id: "s6", title: "Выкуп арендуемого имущества", desc: "Преимущественное право МСП", category: "Недвижимость", term: "45 дней", icon: "pin", serviceType: "city", audience: ["ИП", "ООО"] },
+  { id: "s7", title: "Отчёт по форме МСП", desc: "Автоматическая выгрузка", category: "Отчеты", term: "мгновенно", icon: "chart", serviceType: "city", audience: ["ИП", "ООО"], oneC: true },
+  { id: "s8", title: "Данные по отраслям", desc: "API и витрины данных", category: "Отчеты", term: "мгновенно", icon: "chart", serviceType: "city", audience: ["Физлицо", "Самозанятый", "ИП", "ООО"], oneC: true },
+  { id: "s9", title: "Курьерская доставка по Москве", desc: "Партнёрские тарифы, забор в день заказа", category: "Логистика", term: "от 1 дня", icon: "truck", serviceType: "commercial", audience: ["Самозанятый", "ИП", "ООО"] },
+  { id: "s10", title: "Складское хранение (фулфилмент)", desc: "Аренда складских мест под товар", category: "Логистика", term: "от 500 ₽/м²/мес", icon: "building", serviceType: "commercial", audience: ["ИП", "ООО"] },
+  { id: "s11", title: "Логистика для маркетплейсов", desc: "Доставка на склады Ozon, Wildberries, Я.Маркет", category: "Логистика", term: "от 1 дня", icon: "grid", serviceType: "commercial", audience: ["Самозанятый", "ИП", "ООО"] },
+  { id: "s12", title: "Грузоперевозки по России", desc: "Автомобильные и ж/д перевозки между городами", category: "Логистика", term: "по расписанию", icon: "truck", serviceType: "commercial", audience: ["ИП", "ООО"] },
+  { id: "s13", title: "Импорт и растаможка грузов", desc: "Оформление на таможне под ключ", category: "Логистика", term: "5-14 дней", icon: "shield", serviceType: "commercial", audience: ["ИП", "ООО"] },
+  { id: "s14", title: "Экспресс-доставка «последняя миля»", desc: "До клиента в день заказа", category: "Логистика", term: "2-4 часа", icon: "send", serviceType: "commercial", audience: ["Самозанятый", "ИП", "ООО"] },
   /* Коммерческие сервисы (п.5) — партнёрские услуги для бизнеса */
-  { id: "c1", title: "Бухгалтерское обслуживание", desc: "Аутсорсинг бухгалтерии и отчётности", category: "Коммерческие сервисы", term: "от 1 дня", icon: "receipt" },
-  { id: "c2", title: "Юридическое сопровождение", desc: "Договоры, споры, регистрация изменений", category: "Коммерческие сервисы", term: "от 1 дня", icon: "shield" },
-  { id: "c3", title: "Реклама и продвижение", desc: "Контекст, таргет, соцсети", category: "Коммерческие сервисы", term: "по запросу", icon: "chart" },
-  { id: "c4", title: "Разработка и IT-подряд", desc: "Сайты, интеграции, автоматизация бизнеса", category: "Коммерческие сервисы", term: "по запросу", icon: "grid" },
+  { id: "c1", title: "Бухгалтерское обслуживание", desc: "Аутсорсинг бухгалтерии и отчётности", category: "Коммерческие сервисы", term: "от 1 дня", icon: "receipt", serviceType: "commercial", audience: ["ИП", "ООО"] },
+  { id: "c2", title: "Юридическое сопровождение", desc: "Договоры, споры, регистрация изменений", category: "Коммерческие сервисы", term: "от 1 дня", icon: "shield", serviceType: "commercial", audience: ["Физлицо", "Самозанятый", "ИП", "ООО"] },
+  { id: "c3", title: "Реклама и продвижение", desc: "Контекст, таргет, соцсети", category: "Коммерческие сервисы", term: "по запросу", icon: "chart", serviceType: "commercial", audience: ["Самозанятый", "ИП", "ООО"] },
+  { id: "c4", title: "Разработка и IT-подряд", desc: "Сайты, интеграции, автоматизация бизнеса", category: "Коммерческие сервисы", term: "по запросу", icon: "grid", serviceType: "commercial", audience: ["Самозанятый", "ИП", "ООО"] },
 ];
 
 /* ---------- Партнёры ---------- */

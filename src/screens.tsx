@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, type IconName } from "./icons";
 import { EmptyState, ErrorState, Reveal, Sheet, useToast } from "./ui";
 import {
-  SERVICE_CATALOG, addDays, eventsForDate, loadApplications, loadConnectedIntegrationIds, saveApplications,
-  sectionTitleForCategory, startOfToday, type Application, type DayEvent, type EventKind,
+  SERVICE_AUDIENCES, SERVICE_CATALOG, addDays, eventsForDate, loadApplications, loadConnectedIntegrationIds,
+  saveApplications, sectionTitleForCategory, startOfToday, type Application, type DayEvent, type EventKind,
+  type ServiceAudience,
 } from "./data";
 
 type ServiceItem = (typeof SERVICE_CATALOG)[number];
@@ -153,6 +154,55 @@ function ApplyForm({
   );
 }
 
+/* ---------- Фильтр-дропдаун (свёрнут в одну строку из трёх) ---------- */
+function ServiceFilter({
+  name, options, value, allValue, open, onToggle, onSelect,
+}: {
+  name: string;
+  options: { label: string; value: string }[];
+  value: string;
+  allValue: string;
+  open: boolean;
+  onToggle: () => void;
+  onSelect: (v: string) => void;
+}) {
+  const active = value !== allValue;
+  const current = options.find((o) => o.value === value);
+  return (
+    <div className="relative min-w-0 flex-1">
+      <button
+        onClick={onToggle}
+        className={`press flex w-full items-center justify-between gap-1 rounded-full px-2.5 py-2 text-[11px] font-extrabold transition-colors ${
+          active ? "bg-ink text-on-ink" : "bg-card text-sub shadow-card"
+        }`}
+      >
+        <span className="truncate">{active && current ? current.label : name}</span>
+        <Icon
+          name="chevron-right"
+          className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
+          strokeWidth={2.4}
+        />
+      </button>
+      {open && (
+        <div className="animate-pop absolute left-0 top-full z-30 mt-1.5 max-h-64 w-max min-w-[150px] max-w-[220px] overflow-y-auto rounded-2xl border border-line/80 bg-card p-1 shadow-float">
+          {[{ label: "Все", value: allValue }, ...options].map((o) => (
+            <button
+              key={o.value}
+              onClick={() => onSelect(o.value)}
+              className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[12.5px] font-bold ${
+                value === o.value ? "bg-paper text-ink" : "text-sub"
+              }`}
+            >
+              <span className="truncate">{o.label}</span>
+              {value === o.value && <Icon name="check" className="h-3.5 w-3.5 shrink-0 text-accent" strokeWidth={3} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- Услуги: каталог ---------- */
 export function ServicesScreen({
   category, onCategory,
@@ -163,8 +213,30 @@ export function ServicesScreen({
   const toast = useToast();
   const [applying, setApplying] = useState<ServiceItem | null>(null);
   const connected1C = useMemo(() => loadConnectedIntegrationIds().includes("1c"), []);
-  const cats = ["Все", ...new Set(SERVICE_CATALOG.map((s) => s.category))];
-  const list = category === "Все" ? SERVICE_CATALOG : SERVICE_CATALOG.filter((s) => s.category === category);
+
+  /* Три фильтра, работают пересечением, каждый сбрасывается отдельно. «Направление»
+     использует общий с навигацией параметр category (значение «Все» — без фильтра). */
+  const [typeFilter, setTypeFilter] = useState("all"); // all | city | commercial
+  const [audFilter, setAudFilter] = useState("all"); // all | ServiceAudience
+  const [openFilter, setOpenFilter] = useState<null | "type" | "dir" | "aud">(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!openFilter) return;
+    const onDown = (e: MouseEvent) => {
+      if (filtersRef.current && !filtersRef.current.contains(e.target as Node)) setOpenFilter(null);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [openFilter]);
+
+  const directions = [...new Set(SERVICE_CATALOG.map((s) => s.category))];
+  const list = SERVICE_CATALOG.filter(
+    (s) =>
+      (typeFilter === "all" || s.serviceType === typeFilter) &&
+      (category === "Все" || s.category === category) &&
+      (audFilter === "all" || s.audience.includes(audFilter as ServiceAudience)),
+  );
 
   const submitApplication = () => {
     if (!applying) return;
@@ -190,19 +262,53 @@ export function ServicesScreen({
         <p className="mt-0.5 text-[12.5px] font-semibold text-sub">Каталог сервисов экосистемы</p>
       </Reveal>
 
-      <div data-hscroll className="no-scrollbar -mx-4 mt-3.5 flex gap-1.5 overflow-x-auto px-4">
-        {cats.map((c) => (
-          <button
-            key={c}
-            onClick={() => onCategory(c)}
-            className={`press shrink-0 rounded-full px-3.5 py-2 text-[12px] font-extrabold transition-all duration-300 ${
-              category === c ? "bg-ink text-on-ink" : "bg-card text-sub shadow-card"
-            }`}
-          >
-            {c}
-          </button>
-        ))}
+      <div ref={filtersRef} className="mt-3.5 flex gap-1.5">
+        <ServiceFilter
+          name="Тип"
+          value={typeFilter}
+          allValue="all"
+          options={[
+            { label: "Городские", value: "city" },
+            { label: "Коммерческие", value: "commercial" },
+          ]}
+          open={openFilter === "type"}
+          onToggle={() => setOpenFilter((c) => (c === "type" ? null : "type"))}
+          onSelect={(v) => {
+            setTypeFilter(v);
+            setOpenFilter(null);
+          }}
+        />
+        <ServiceFilter
+          name="Направление"
+          value={category}
+          allValue="Все"
+          options={directions.map((d) => ({ label: d, value: d }))}
+          open={openFilter === "dir"}
+          onToggle={() => setOpenFilter((c) => (c === "dir" ? null : "dir"))}
+          onSelect={(v) => {
+            onCategory(v);
+            setOpenFilter(null);
+          }}
+        />
+        <ServiceFilter
+          name="Кому"
+          value={audFilter}
+          allValue="all"
+          options={SERVICE_AUDIENCES.map((a) => ({ label: a, value: a }))}
+          open={openFilter === "aud"}
+          onToggle={() => setOpenFilter((c) => (c === "aud" ? null : "aud"))}
+          onSelect={(v) => {
+            setAudFilter(v);
+            setOpenFilter(null);
+          }}
+        />
       </div>
+
+      {list.length === 0 && (
+        <div className="mt-4 rounded-2xl border border-line/80 bg-card shadow-card">
+          <EmptyState title="Ничего не найдено" hint="Смягчите фильтры или сбросьте один из них — выберите «Все»." />
+        </div>
+      )}
 
       <div className="mt-4 space-y-2.5">
         {list.map((s, i) => (
