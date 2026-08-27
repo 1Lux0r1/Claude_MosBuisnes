@@ -377,7 +377,11 @@ function ActionSheetView({
 
     return (
       <div className="animate-fade-in absolute inset-0 z-[62] flex flex-col bg-paper">
-        <div className="border-b border-line/70 bg-card/90 backdrop-blur-md">
+        {/* relative z-20 поднимает слой шапки (у неё backdrop-blur создаёт свой
+            контекст наложения) над прокручиваемой областью с карточками, иначе
+            выпадающий список сортировки, выходящий из шапки вниз, перекрывается
+            карточками (они идут в DOM позже при том же z-auto). */}
+        <div className="relative z-20 border-b border-line/70 bg-card/90 backdrop-blur-md">
           <div className="flex items-center gap-3 px-4 py-3">
             <button onClick={onClose} className="press grid h-9 w-9 shrink-0 place-items-center rounded-full bg-paper text-ink2" aria-label="Назад">
               <Icon name="chevron-left" className="h-5 w-5" strokeWidth={2.1} />
