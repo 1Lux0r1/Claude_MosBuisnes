@@ -319,7 +319,14 @@ export function InterestingBlock() {
   return (
     <Reveal>
       <section className="px-4">
-        <h2 className="font-display text-[15px] font-semibold tracking-tight">Возможно интересно</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-[15px] font-semibold tracking-tight">Возможно интересно</h2>
+          {hasMore && (
+            <button onClick={() => stub("Все предложения")} className="press shrink-0 text-[12.5px] font-bold text-accent">
+              Показать все
+            </button>
+          )}
+        </div>
         <div className="mt-3 grid grid-cols-3 gap-2.5">
           {visible.map((t) => (
             <button
@@ -334,11 +341,6 @@ export function InterestingBlock() {
             </button>
           ))}
         </div>
-        {hasMore && (
-          <button onClick={() => stub("Все предложения")} className="press mt-2 text-[12px] font-bold text-accent">
-            Показать все
-          </button>
-        )}
       </section>
     </Reveal>
   );
