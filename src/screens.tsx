@@ -473,17 +473,19 @@ export function EventsScreen({
                       {x.ev.place && <span> · {x.ev.place}</span>}
                     </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      onRegister(x.id);
-                      toast(done ? "Запись отменена" : `Вы записаны: «${x.ev.title}»`, done ? "close" : "check");
-                    }}
-                    className={`press shrink-0 rounded-full px-3 py-2 text-[11px] font-extrabold transition-colors duration-300 ${
-                      done ? "bg-ok-soft text-ok" : "bg-ink text-on-ink hover:bg-accent hover:text-white"
-                    }`}
-                  >
-                    {done ? "Вы записаны" : "Записаться"}
-                  </button>
+                  {x.ev.kind === "info" && (
+                    <button
+                      onClick={() => {
+                        onRegister(x.id);
+                        toast(done ? "Запись отменена" : `Вы записаны: «${x.ev.title}»`, done ? "close" : "check");
+                      }}
+                      className={`press shrink-0 rounded-full px-3 py-2 text-[11px] font-extrabold transition-colors duration-300 ${
+                        done ? "bg-ok-soft text-ok" : "bg-ink text-on-ink hover:bg-accent hover:text-white"
+                      }`}
+                    >
+                      {done ? "Вы записаны" : "Записаться"}
+                    </button>
+                  )}
                 </div>
               </Reveal>
             );
