@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Icon, KremlinLogo, type IconName } from "./icons";
+import { Icon, type IconName } from "./icons";
 import { SEARCH_INDEX, type SearchHit } from "./data";
 
 const GROUP_ICON: Record<string, string> = { Действия: "spark", Услуги: "clipboard", "Партнёры": "star", Новости: "news" };
@@ -115,8 +115,12 @@ export default function Header({
             <Icon name="chevron-left" className="h-5 w-5" strokeWidth={2.1} />
           </button>
         ) : (
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white p-1.5 shadow-card">
-            <KremlinLogo className="h-full w-full" />
+          <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-white shadow-card">
+            <img
+              src={`${import.meta.env.BASE_URL}logo.png`}
+              alt="МосБизнес"
+              className="h-full w-full object-cover"
+            />
           </span>
         )}
 
