@@ -327,17 +327,17 @@ export function InterestingBlock() {
             </button>
           )}
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2.5">
+        <div className="mt-3 grid grid-cols-3 gap-1.5">
           {visible.map((t) => (
             <button
               key={t.key}
               onClick={() => stub(t.title)}
-              className="press flex aspect-square flex-col rounded-2xl border border-line/80 bg-card p-2.5 text-left shadow-card transition-shadow hover:shadow-float"
+              className="press flex aspect-square flex-col rounded-2xl border border-line/80 bg-card p-1.5 text-left shadow-card transition-shadow hover:shadow-float"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-ink2-solid" style={{ background: t.tint }}>
                 <Icon name={t.icon} className="h-[18px] w-[18px]" />
               </span>
-              <span className="mt-2 line-clamp-3 flex-1 break-words text-[10.5px] font-extrabold leading-tight tracking-tight">{t.label}</span>
+              <span className="mt-2 line-clamp-2 flex-1 break-words text-[10px] font-extrabold leading-tight tracking-tight">{t.label}</span>
             </button>
           ))}
         </div>
