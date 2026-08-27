@@ -8,6 +8,7 @@ import {
 import {
   fmtFxDate, fmtFxPrice, getFxSeries, TIMEFRAMES, type OhlcPoint, type TimeframeId,
 } from "./fxHistory";
+import { toggleFavorite, useFavorites } from "./data/favorites";
 
 const fmtFx = (v: number) => new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(v);
 
@@ -466,6 +467,9 @@ export function NewsCarousel({
   onAllNews: () => void;
 }) {
   const { ref, index, onScroll, goTo, onPointerDown, onPointerMove, onPointerUp, onPointerCancel } = useSnap(HOME_NEWS.length);
+  const toast = useToast();
+  const favs = useFavorites();
+  const [menuNews, setMenuNews] = useState<NewsItem | null>(null);
   return (
     <Reveal>
       <section>
@@ -504,11 +508,13 @@ export function NewsCarousel({
                       <Icon name={NEWS_SECTION_META[n.section].icon} className="h-3 w-3" strokeWidth={2.2} />
                       {NEWS_SECTION_META[n.section].label}
                     </span>
-                    {n.important && (
-                      <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-danger" title="Важная новость">
-                        <Icon name="excl" className="h-3.5 w-3.5" strokeWidth={2.6} />
-                      </span>
-                    )}
+                    <button
+                      onClick={() => setMenuNews(n)}
+                      aria-label="Меню новости"
+                      className="press grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/90 text-ink-solid backdrop-blur-sm"
+                    >
+                      <Icon name="dots" className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col p-4">
@@ -531,6 +537,35 @@ export function NewsCarousel({
         </div>
         <Dots count={HOME_NEWS.length} active={index} onPick={goTo} />
       </section>
+
+      {menuNews && (
+        <Sheet open onClose={() => setMenuNews(null)} title="Новость">
+          <p className="line-clamp-2 text-[13.5px] font-extrabold leading-snug tracking-tight">{menuNews.title}</p>
+          <div className="mt-3 space-y-1">
+            <button
+              onClick={() => {
+                toast("Ссылка на новость скопирована", "send");
+                setMenuNews(null);
+              }}
+              className="press flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-bold text-ink2 transition-colors hover:bg-paper"
+            >
+              <Icon name="send" className="h-[18px] w-[18px]" strokeWidth={2} />
+              Поделиться
+            </button>
+            <button
+              onClick={() => {
+                const added = toggleFavorite(menuNews.id);
+                toast(added ? "Добавлено в избранное" : "Убрано из избранного", "star");
+                setMenuNews(null);
+              }}
+              className="press flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-bold text-ink2 transition-colors hover:bg-paper"
+            >
+              <Icon name="star" className={`h-[18px] w-[18px] ${favs.has(menuNews.id) ? "text-accent" : ""}`} strokeWidth={2} />
+              {favs.has(menuNews.id) ? "Убрать из избранного" : "В избранное"}
+            </button>
+          </div>
+        </Sheet>
+      )}
     </Reveal>
   );
 }

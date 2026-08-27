@@ -212,6 +212,13 @@ const paths: Record<string, JSX.Element> = {
       <path d="M2.5 15.5h1.7M18.1 15.5h1.4" />
     </>
   ),
+  dots: (
+    <>
+      <circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof paths;
