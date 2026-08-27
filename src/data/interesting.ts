@@ -42,11 +42,20 @@ export interface FeatureCard {
 
 export const TAX_FORECAST_CARD: FeatureCard = {
   title: "Прогнозная модель налогообложения",
-  short: "Налоги",
+  short: "Прогноз налогообложения",
   desc: "Расчёт специальной ставки при наступлении условия — например, при трудоустройстве сотрудника с инвалидностью.",
   icon: "chart",
   tint: "#e6efff",
   action: "Рассчитать",
+};
+
+export const MOEX_TRENDS_CARD: FeatureCard = {
+  title: "Тренды Московской Биржи",
+  short: "Тренды МосБиржи",
+  desc: "Курсы валют, ключевые индексы и настроения рынка для планирования.",
+  icon: "trend-up",
+  tint: "#e6efff",
+  action: "Смотреть",
 };
 
 export const LIQUIDITY_CARD: FeatureCard = {

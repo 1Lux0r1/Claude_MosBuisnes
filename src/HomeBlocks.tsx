@@ -5,7 +5,7 @@ import {
   DEFAULT_QUICK_ACTION_IDS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS,
   type Partner, type QuickAction, type ServiceSection,
 } from "./data";
-import { LIQUIDITY_CARD, PERSONAL_OFFERS, TAX_FORECAST_CARD } from "./data/interesting";
+import { LIQUIDITY_CARD, MOEX_TRENDS_CARD, PERSONAL_OFFERS, TAX_FORECAST_CARD } from "./data/interesting";
 import { fmtSupportAmount, supportAvailableTotal, supportMeasuresCount } from "./data/support-measures";
 
 const PARTNER_PAGE_SIZE = 4;
@@ -299,12 +299,13 @@ export function PartnersBlock({
 /* Плитки блока — единый вид (иконка своего цвета, заголовок, кнопка). Собраны
    из карточек данных interesting.ts: прогнозная модель, персональные
    предложения, управление ликвидностью. */
-type InterestingTile = { key: string; icon: IconName; tint: string; label: string; title: string; action: string };
+type InterestingTile = { key: string; icon: IconName; tint: string; label: string; title: string };
 
 const INTERESTING_TILES: InterestingTile[] = [
-  { key: "forecast", icon: TAX_FORECAST_CARD.icon, tint: TAX_FORECAST_CARD.tint, label: TAX_FORECAST_CARD.short, title: TAX_FORECAST_CARD.title, action: TAX_FORECAST_CARD.action },
-  ...PERSONAL_OFFERS.map((o) => ({ key: o.id, icon: o.icon, tint: o.tint, label: o.short, title: o.title, action: o.action })),
-  { key: "liquidity", icon: LIQUIDITY_CARD.icon, tint: LIQUIDITY_CARD.tint, label: LIQUIDITY_CARD.short, title: LIQUIDITY_CARD.title, action: LIQUIDITY_CARD.action },
+  { key: "forecast", icon: TAX_FORECAST_CARD.icon, tint: TAX_FORECAST_CARD.tint, label: TAX_FORECAST_CARD.short, title: TAX_FORECAST_CARD.title },
+  { key: "moex", icon: MOEX_TRENDS_CARD.icon, tint: MOEX_TRENDS_CARD.tint, label: MOEX_TRENDS_CARD.short, title: MOEX_TRENDS_CARD.title },
+  ...PERSONAL_OFFERS.map((o) => ({ key: o.id, icon: o.icon, tint: o.tint, label: o.short, title: o.title })),
+  { key: "liquidity", icon: LIQUIDITY_CARD.icon, tint: LIQUIDITY_CARD.tint, label: LIQUIDITY_CARD.short, title: LIQUIDITY_CARD.title },
 ];
 
 const INTERESTING_TILE_LIMIT = 3;
@@ -321,18 +322,16 @@ export function InterestingBlock() {
         <h2 className="font-display text-[15px] font-semibold tracking-tight">Возможно интересно</h2>
         <div className="mt-3 grid grid-cols-3 gap-2.5">
           {visible.map((t) => (
-            <div key={t.key} className="flex aspect-square flex-col rounded-2xl border border-line/80 bg-card p-2.5 shadow-card">
+            <button
+              key={t.key}
+              onClick={() => stub(t.title)}
+              className="press flex aspect-square flex-col rounded-2xl border border-line/80 bg-card p-2.5 text-left shadow-card transition-shadow hover:shadow-float"
+            >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-ink2-solid" style={{ background: t.tint }}>
                 <Icon name={t.icon} className="h-[18px] w-[18px]" />
               </span>
-              <span className="mt-2 line-clamp-2 flex-1 text-[11.5px] font-extrabold leading-tight tracking-tight">{t.label}</span>
-              <button
-                onClick={() => stub(t.title)}
-                className="press mt-1 w-full rounded-full bg-accent-soft py-1.5 text-[9.5px] font-extrabold text-accent-deep"
-              >
-                {t.action}
-              </button>
-            </div>
+              <span className="mt-2 line-clamp-3 flex-1 text-[11.5px] font-extrabold leading-tight tracking-tight">{t.label}</span>
+            </button>
           ))}
         </div>
         {hasMore && (
