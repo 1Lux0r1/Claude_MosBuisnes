@@ -100,11 +100,6 @@ export function QuickActions({
                     onClick={() => onPick(a)}
                     className="press relative flex h-full w-full flex-col items-start rounded-2xl border border-line/80 bg-card p-3 text-left shadow-card transition-shadow hover:shadow-float"
                   >
-                    {a.badge && (
-                      <span className="absolute -right-1.5 -top-1.5 grid h-[19px] min-w-[19px] place-items-center rounded-full border-2 border-card bg-danger px-1 text-[10px] font-extrabold leading-none text-white">
-                        {a.badge}
-                      </span>
-                    )}
                     <span className="grid h-9 w-9 place-items-center rounded-xl text-ink2-solid" style={{ background: a.tint }}>
                       <Icon name={a.icon as IconName} className="h-[19px] w-[19px]" />
                     </span>
