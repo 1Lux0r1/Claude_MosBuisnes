@@ -8,14 +8,14 @@ import {
   HomePromos, InterestingBlock, MAX_QUICK_ACTIONS, MIN_QUICK_ACTIONS, PartnersBlock, QUICK_ACTIONS_KEY,
   QuickActions, QuickActionsPicker, ServiceSections, loadEnabledQuickActionIds,
 } from "./HomeBlocks";
-import { EventsScreen, OfflineError, ServicesScreen } from "./screens";
+import { EventsScreen, OfflineError, ServiceFilter, ServicesScreen } from "./screens";
 import ProfileService from "./microservices/ProfileService";
 import SettingsService from "./microservices/SettingsService";
 import { HomeSkeleton, Reveal, Sheet, ToastProvider, useToast } from "./ui";
 import { Icon } from "./icons";
 import {
-  NEWS, NEWS_SECTION_META, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS,
-  type NewsItem, type NewsSection, type Partner, type QuickAction, type SearchHit, type ServiceSection,
+  NEWS, NEWS_SECTION_META, NEWS_SORT_OPTIONS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS, sortNews,
+  type NewsItem, type NewsSection, type NewsSort, type Partner, type QuickAction, type SearchHit, type ServiceSection,
 } from "./data";
 
 type SheetState =
@@ -353,13 +353,26 @@ function ActionSheetView({
 }) {
   const toast = useToast();
   const [newsFilter, setNewsFilter] = useState<NewsSection | "all">("all");
+  const [newsSort, setNewsSort] = useState<NewsSort>("new");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [sortOpen]);
 
   if (!sheet) return null;
 
   if (sheet.kind === "newslist") {
-    const filtered = (newsFilter === "all" ? NEWS : NEWS.filter((n) => n.section === newsFilter))
-      .slice()
-      .sort((a, b) => b.relevance - a.relevance);
+    const filtered = sortNews(
+      newsFilter === "all" ? NEWS : NEWS.filter((n) => n.section === newsFilter),
+      newsSort,
+    );
+    const sortLabel = NEWS_SORT_OPTIONS.find((o) => o.value === newsSort)?.label.toLowerCase() ?? "";
 
     return (
       <div className="animate-fade-in absolute inset-0 z-[62] flex flex-col bg-paper">
@@ -370,7 +383,7 @@ function ActionSheetView({
             </button>
             <div className="min-w-0 flex-1">
               <p className="font-display text-[15px] font-semibold tracking-tight">Все новости</p>
-              <p className="text-[11px] font-semibold text-sub">{filtered.length} новостей · по релевантности</p>
+              <p className="text-[11px] font-semibold text-sub">{filtered.length} новостей · {sortLabel}</p>
             </div>
           </div>
           <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3">
@@ -394,6 +407,21 @@ function ActionSheetView({
                 {NEWS_SECTION_META[s].label}
               </button>
             ))}
+          </div>
+          <div ref={sortRef} className="flex items-center gap-1.5 px-4 pb-3">
+            <ServiceFilter
+              name="Сортировка"
+              value={newsSort}
+              allValue="new"
+              showReset={false}
+              options={NEWS_SORT_OPTIONS}
+              open={sortOpen}
+              onToggle={() => setSortOpen((v) => !v)}
+              onSelect={(v) => {
+                setNewsSort(v as NewsSort);
+                setSortOpen(false);
+              }}
+            />
           </div>
         </div>
 

@@ -850,6 +850,55 @@ export const NEWS: NewsItem[] = [
   },
 ];
 
+/* ---------- Сортировка новостей (экран «Все новости») ---------- */
+export type NewsSort = "new" | "old" | "relevance" | "popular";
+
+export const NEWS_SORT_OPTIONS: { label: string; value: NewsSort }[] = [
+  { label: "Сначала новые", value: "new" },
+  { label: "Сначала старые", value: "old" },
+  { label: "По релевантности", value: "relevance" },
+  { label: "Популярные", value: "popular" },
+];
+
+/* Просмотры новостей — для сортировки «Популярные». Ключ — id новости.
+   Значения демонстрационные. */
+export const NEWS_VIEWS: Record<string, number> = {
+  "n-city-1": 5400, "n-city-2": 3100, "n-city-3": 2200, "n-city-4": 4800, "n-city-5": 1500, "n-city-6": 900,
+  "n-ind-1": 8700, "n-ind-2": 2600, "n-ind-3": 3300, "n-ind-4": 1700, "n-ind-5": 1200, "n-ind-6": 2000, "n-ind-7": 4100,
+  "n-cur-1": 9500, "n-cur-2": 6200, "n-cur-3": 2800, "n-cur-4": 1300, "n-cur-5": 1900,
+  "n-tax-1": 7100, "n-tax-2": 5300, "n-tax-3": 3800, "n-tax-4": 2400, "n-tax-5": 1600,
+};
+export const newsViews = (id: string): number => NEWS_VIEWS[id] ?? 0;
+
+/* Приблизительный «возраст» новости в часах из относительной даты
+   («Сегодня, HH:MM», «Вчера…», «N дней назад», «неделю назад») — чтобы
+   сортировать по свежести на существующих данных. Меньше — новее. */
+export function newsAgeHours(date: string): number {
+  const t = date.match(/(\d{1,2}):(\d{2})/);
+  const within = t ? 24 - (Number(t[1]) + Number(t[2]) / 60) : 12;
+  if (date.includes("Сегодня")) return within;
+  if (date.includes("Вчера")) return 24 + within;
+  const d = date.match(/(\d+)\s*дн/);
+  if (d) return Number(d[1]) * 24 + 12;
+  if (date.includes("недел")) return 7 * 24 + 12;
+  return 9999;
+}
+
+/** Отсортировать новости по выбранному режиму (исходный массив не мутируется). */
+export function sortNews(list: NewsItem[], sort: NewsSort): NewsItem[] {
+  const arr = list.slice();
+  switch (sort) {
+    case "new":
+      return arr.sort((a, b) => newsAgeHours(a.date) - newsAgeHours(b.date));
+    case "old":
+      return arr.sort((a, b) => newsAgeHours(b.date) - newsAgeHours(a.date));
+    case "relevance":
+      return arr.sort((a, b) => b.relevance - a.relevance);
+    case "popular":
+      return arr.sort((a, b) => newsViews(b.id) - newsViews(a.id));
+  }
+}
+
 /* ---------- ИИ-агент ---------- */
 export const AI_CHIPS = ["Какие субсидии мне доступны?", "Срок оплаты патента", "Как получить справку?", "Подобрать помещение"];
 

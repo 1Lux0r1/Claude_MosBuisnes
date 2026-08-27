@@ -155,9 +155,9 @@ function ApplyForm({
   );
 }
 
-/* ---------- Фильтр-дропдаун (свёрнут в одну строку из трёх) ---------- */
-function ServiceFilter({
-  name, options, value, allValue, open, onToggle, onSelect,
+/* ---------- Фильтр-дропдаун (используется в «Услугах» и в «Все новости») ---------- */
+export function ServiceFilter({
+  name, options, value, allValue, open, onToggle, onSelect, showReset = true,
 }: {
   name: string;
   options: { label: string; value: string }[];
@@ -166,6 +166,8 @@ function ServiceFilter({
   open: boolean;
   onToggle: () => void;
   onSelect: (v: string) => void;
+  /** Показывать пункт «Все» (сброс) первым в списке. Для сортировки — false. */
+  showReset?: boolean;
 }) {
   const active = value !== allValue;
   const current = options.find((o) => o.value === value);
@@ -186,7 +188,7 @@ function ServiceFilter({
       </button>
       {open && (
         <div className="animate-pop absolute left-0 top-full z-30 mt-1.5 max-h-64 w-max min-w-[150px] max-w-[220px] overflow-y-auto rounded-2xl border border-line/80 bg-card p-1 shadow-float">
-          {[{ label: "Все", value: allValue }, ...options].map((o) => (
+          {(showReset ? [{ label: "Все", value: allValue }, ...options] : options).map((o) => (
             <button
               key={o.value}
               onClick={() => onSelect(o.value)}
