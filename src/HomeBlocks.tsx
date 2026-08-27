@@ -383,7 +383,7 @@ export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
       <div className="space-y-2.5 px-4">
         {/* п.8 — тизер персональной витрины */}
         {showVitrina && (
-          <div className="relative overflow-hidden rounded-2xl border border-accent/20 bg-accent-soft/60 p-3.5">
+          <div className="relative flex min-h-[80px] flex-col justify-center overflow-hidden rounded-2xl border border-accent/20 bg-accent-soft/60 p-3.5">
             <button
               aria-label="Скрыть"
               onClick={() => dismiss(PROMO_VITRINA_KEY, setShowVitrina)}
@@ -396,8 +396,8 @@ export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
                 <Icon name="coins" className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[13.5px] font-extrabold tracking-tight text-accent-deep">Вам доступно до {total}</span>
-                <span className="block text-[11.5px] font-semibold text-sub">по {count} мерам поддержки</span>
+                <span className="block line-clamp-2 text-[13.5px] font-extrabold tracking-tight text-accent-deep">Вам доступно до {total}</span>
+                <span className="block line-clamp-1 text-[11.5px] font-semibold text-sub">по {count} мерам поддержки</span>
               </span>
               <Icon name="arrow-right" className="h-4 w-4 shrink-0 text-accent-deep" strokeWidth={2.2} />
             </button>
@@ -406,7 +406,7 @@ export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
 
         {/* Истекает срок действия МЧД */}
         {showMchd && (
-          <div className="relative overflow-hidden rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
+          <div className="relative flex min-h-[80px] flex-col justify-center overflow-hidden rounded-2xl border border-line/80 bg-card p-3.5 shadow-card">
             <button
               aria-label="Скрыть"
               onClick={() => dismiss(PROMO_MCHD_KEY, setShowMchd)}
@@ -422,7 +422,7 @@ export function HomePromos({ onOpenVitrina }: { onOpenVitrina: () => void }) {
                 <Icon name="clock" className="h-5 w-5" strokeWidth={2} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[13.5px] font-extrabold tracking-tight">Истекает срок действия МЧД</span>
+                <span className="block line-clamp-2 text-[13.5px] font-extrabold tracking-tight">Истекает срок действия МЧД</span>
                 <span className="block line-clamp-1 text-[11.5px] font-semibold text-sub">Получить электронную доверенность</span>
               </span>
               <Icon name="arrow-right" className="h-4 w-4 shrink-0 text-sub" strokeWidth={2.2} />
