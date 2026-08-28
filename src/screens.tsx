@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, type IconName } from "./icons";
 import { EmptyState, ErrorState, Reveal, Sheet, useToast } from "./ui";
 import {
-  SERVICE_AUDIENCES, SERVICE_CATALOG, addDays, eventsForDate, loadApplications, loadConnectedIntegrationIds,
-  saveApplications, sectionTitleForCategory, startOfToday, type Application, type DayEvent, type EventKind,
-  type ServiceAudience,
+  EXTRA_DIRECTIONS, SERVICE_AUDIENCES, SERVICE_CATALOG, addDays, eventsForDate, loadApplications,
+  loadConnectedIntegrationIds, saveApplications, sectionTitleForCategory, serviceDirections, startOfToday,
+  type Application, type DayEvent, type EventKind, type ServiceAudience,
 } from "./data";
 import { fmtSupportAmount, supportAvailableTotal, supportMeasuresCount } from "./data/support-measures";
 
@@ -233,11 +233,11 @@ export function ServicesScreen({
     return () => document.removeEventListener("mousedown", onDown);
   }, [openFilter]);
 
-  const directions = [...new Set(SERVICE_CATALOG.map((s) => s.category))];
+  const directions = [...new Set(SERVICE_CATALOG.map((s) => s.category)), ...EXTRA_DIRECTIONS];
   const list = SERVICE_CATALOG.filter(
     (s) =>
       (typeFilter === "all" || s.serviceType === typeFilter) &&
-      (category === "Все" || s.category === category) &&
+      (category === "Все" || s.category === category || serviceDirections(s.id).includes(category)) &&
       (audFilter === "all" || s.audience.includes(audFilter as ServiceAudience)),
   );
 
