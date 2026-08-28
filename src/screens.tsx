@@ -255,7 +255,9 @@ export function ServicesScreen({
     return () => document.removeEventListener("mousedown", onDown);
   }, [openFilter]);
 
-  const directions = [...new Set(SERVICE_CATALOG.map((s) => s.category)), ...EXTRA_DIRECTIONS];
+  /* Новые бизнес-направления идут первыми, затем существующие категории каталога.
+     Пункт «Все» добавляется отдельно (в ServiceFilter) и остаётся на самом верху. */
+  const directions = [...EXTRA_DIRECTIONS, ...new Set(SERVICE_CATALOG.map((s) => s.category))];
   const list = SERVICE_CATALOG.filter(
     (s) =>
       (typeFilter === "all" || s.serviceType === typeFilter) &&
