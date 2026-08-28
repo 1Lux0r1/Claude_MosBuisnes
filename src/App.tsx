@@ -104,7 +104,12 @@ export default function App() {
       }
     } else if (hit.group === "Партнёры") {
       const p = PARTNER_PAGES.flatMap((pg) => pg.items).find((x) => x.id === id);
-      if (p) setSheet({ kind: "partner", data: p });
+      if (p?.servicesCategory) {
+        setServicesCategory(p.servicesCategory);
+        go(1, "left");
+      } else if (p) {
+        setSheet({ kind: "partner", data: p });
+      }
     } else {
       const n = NEWS.find((x) => x.id === id);
       if (n) setSheet({ kind: "news", data: n });
@@ -258,7 +263,14 @@ function Shell(props: {
                     setServicesCategory(s.category);
                     onGoTab(1);
                   }}
-                  onPartner={(p) => setSheet({ kind: "partner", data: p })}
+                  onPartner={(p) => {
+                    if (p.servicesCategory) {
+                      setServicesCategory(p.servicesCategory);
+                      onGoTab(1);
+                    } else {
+                      setSheet({ kind: "partner", data: p });
+                    }
+                  }}
                   onAllServices={() => {
                     setServicesCategory("Все");
                     onGoTab(1);
