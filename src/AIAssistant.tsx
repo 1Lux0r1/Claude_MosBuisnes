@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon, MobiusIcon } from "./icons";
 import { AI_CHIPS, aiReply, loadConnectedIntegrationIds } from "./data";
 import { generateReportAnalysis, REPORT_META, type ReportKind } from "./data/reports";
+import { useDragScroll } from "./ui";
 
 interface Msg { role: "ai" | "user"; text: string }
 
@@ -30,6 +31,7 @@ export default function AIAssistant({
   const listRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chipsScroll = useDragScroll<HTMLDivElement>();
 
   useEffect(() => {
     if (!open) return;
@@ -163,7 +165,14 @@ export default function AIAssistant({
       <input ref={fileInputRef} type="file" className="hidden" onChange={onFileChosen} />
 
       {/* Чипы-подсказки — заменяются на шаги мастера загрузки отчётности */}
-      <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2.5">
+      <div
+        ref={chipsScroll.ref}
+        onPointerDown={chipsScroll.onPointerDown}
+        onPointerMove={chipsScroll.onPointerMove}
+        onPointerUp={chipsScroll.onPointerUp}
+        onPointerCancel={chipsScroll.onPointerCancel}
+        className="no-scrollbar flex cursor-grab gap-2 overflow-x-auto px-4 pb-2.5 active:cursor-grabbing"
+      >
         {flowStep === "idle" && (
           <>
             <button
