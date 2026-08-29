@@ -316,7 +316,7 @@ function Shell(props: {
         profileBadge={profileRead ? 0 : 1}
       />
 
-      <AIAssistant open={aiOpen} onClose={() => setAiOpen(false)} />
+      <AIAssistant open={aiOpen} onClose={() => setAiOpen(false)} onOpenIntegrations={() => { setAiOpen(false); onGoTab(3); }} />
       <SettingsService open={settingsOpen} onClose={() => setSettingsOpen(false)} offline={offline} onOffline={setOffline} />
       <QuickActionsPicker
         open={quickActionsPickerOpen}

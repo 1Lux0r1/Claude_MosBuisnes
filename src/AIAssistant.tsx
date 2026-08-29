@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon, MobiusIcon } from "./icons";
-import { AI_CHIPS, aiReply } from "./data";
+import { AI_CHIPS, aiReply, loadConnectedIntegrationIds } from "./data";
+import { generateReportAnalysis, REPORT_META, type ReportKind } from "./data/reports";
 
 interface Msg { role: "ai" | "user"; text: string }
 
@@ -9,13 +10,26 @@ const GREETING: Msg = {
   text: "Здравствуйте, Анна! Я ИИ-агент экосистемы МосБизнес. Вижу 3 задачи на ближайшие дни: оплата патента, отчёт по субсидии и декларация НДС. Чем помочь?",
 };
 
+/* Загрузка и разбор отчётности — шаг мастера, управляет тем, какой ряд
+   кнопок показан вместо обычных чипов-подсказок под лентой сообщений. */
+type FlowStep = "idle" | "pick-report" | "pick-source";
+
 /* Отдельный экран диалога с ассистентом (открывается кнопкой над меню) */
-export default function AIAssistant({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function AIAssistant({
+  open, onClose, onOpenIntegrations,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onOpenIntegrations: () => void;
+}) {
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [flowStep, setFlowStep] = useState<FlowStep>("idle");
+  const [pendingReport, setPendingReport] = useState<ReportKind | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number>(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -43,6 +57,56 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
       setMessages((m) => [...m, { role: "ai", text: aiReply(text) }]);
       setTyping(false);
     }, 1100);
+  };
+
+  /* Читаем при каждом обращении, а не мемоизируем: этот компонент не
+     размонтируется при переключении вкладок, в отличие от экранов, где
+     подключение 1С проверяется так же — иначе состояние протухнет. */
+  const connected1C = () => loadConnectedIntegrationIds().includes("1c");
+
+  const startReportFlow = () => {
+    setMessages((m) => [...m, { role: "ai", text: "Какую отчётность разберём?" }]);
+    setFlowStep("pick-report");
+  };
+
+  const cancelFlow = () => {
+    setFlowStep("idle");
+    setPendingReport(null);
+  };
+
+  const pickReport = (kind: ReportKind) => {
+    setMessages((m) => [
+      ...m,
+      { role: "user", text: REPORT_META[kind].title },
+      { role: "ai", text: "Как загрузим отчёт — файлом или напрямую из 1С?" },
+    ]);
+    setPendingReport(kind);
+    setFlowStep("pick-source");
+  };
+
+  const runAnalysis = (report: ReportKind, sourceText: string) => {
+    setMessages((m) => [...m, { role: "user", text: sourceText }]);
+    setFlowStep("idle");
+    setPendingReport(null);
+    setTyping(true);
+    timerRef.current = window.setTimeout(() => {
+      setMessages((m) => [...m, { role: "ai", text: generateReportAnalysis(report) }]);
+      setTyping(false);
+    }, 1600);
+  };
+
+  const pickFile = () => fileInputRef.current?.click();
+
+  const onFileChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !pendingReport) return;
+    runAnalysis(pendingReport, `Загрузил файл: «${file.name}»`);
+  };
+
+  const loadFromOneC = () => {
+    if (!pendingReport) return;
+    runAnalysis(pendingReport, "Подтягиваю отчёт из 1С:Предприятие…");
   };
 
   return (
@@ -77,7 +141,7 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
         {messages.map((m, i) => (
           <div key={i} className={`animate-fade-up flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[13px] font-medium leading-relaxed shadow-card ${
+              className={`max-w-[82%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-[13px] font-medium leading-relaxed shadow-card ${
                 m.role === "user" ? "rounded-br-md bg-accent text-white" : "rounded-bl-md bg-card text-ink2"
               }`}
             >
@@ -96,13 +160,77 @@ export default function AIAssistant({ open, onClose }: { open: boolean; onClose:
         )}
       </div>
 
-      {/* Чипы-подсказки */}
+      <input ref={fileInputRef} type="file" className="hidden" onChange={onFileChosen} />
+
+      {/* Чипы-подсказки — заменяются на шаги мастера загрузки отчётности */}
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2.5">
-        {AI_CHIPS.map((c) => (
-          <button key={c} onClick={() => send(c)} className="press shrink-0 rounded-full border border-line bg-card px-3.5 py-2 text-[12px] font-bold text-accent-deep shadow-card">
-            {c}
-          </button>
-        ))}
+        {flowStep === "idle" && (
+          <>
+            <button
+              onClick={startReportFlow}
+              className="press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-3.5 py-2 text-[12px] font-bold text-accent-deep shadow-card"
+            >
+              <Icon name="doc" className="h-3.5 w-3.5" strokeWidth={2.2} />
+              Загрузить отчётность
+            </button>
+            {AI_CHIPS.map((c) => (
+              <button key={c} onClick={() => send(c)} className="press shrink-0 rounded-full border border-line bg-card px-3.5 py-2 text-[12px] font-bold text-accent-deep shadow-card">
+                {c}
+              </button>
+            ))}
+          </>
+        )}
+        {flowStep === "pick-report" && (
+          <>
+            {(Object.keys(REPORT_META) as ReportKind[]).map((k) => (
+              <button
+                key={k}
+                onClick={() => pickReport(k)}
+                className="press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-2 text-[12px] font-bold text-accent-deep shadow-card"
+              >
+                <Icon name={REPORT_META[k].icon} className="h-3.5 w-3.5" strokeWidth={2.2} />
+                {REPORT_META[k].title}
+              </button>
+            ))}
+            <button onClick={cancelFlow} className="press shrink-0 rounded-full border border-line bg-card px-3.5 py-2 text-[12px] font-bold text-sub shadow-card">
+              Отмена
+            </button>
+          </>
+        )}
+        {flowStep === "pick-source" && (
+          <>
+            <button
+              onClick={pickFile}
+              className="press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-2 text-[12px] font-bold text-accent-deep shadow-card"
+            >
+              <Icon name="doc" className="h-3.5 w-3.5" strokeWidth={2.2} />
+              Загрузить файл
+            </button>
+            {connected1C() ? (
+              <button
+                onClick={loadFromOneC}
+                className="press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-2 text-[12px] font-bold text-accent-deep shadow-card"
+              >
+                <Icon name="link" className="h-3.5 w-3.5" strokeWidth={2.2} />
+                Из 1С
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  cancelFlow();
+                  onOpenIntegrations();
+                }}
+                className="press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-paper px-3.5 py-2 text-[12px] font-bold text-sub shadow-card"
+              >
+                <Icon name="link" className="h-3.5 w-3.5" strokeWidth={2.2} />
+                Подключить 1С
+              </button>
+            )}
+            <button onClick={cancelFlow} className="press shrink-0 rounded-full border border-line bg-card px-3.5 py-2 text-[12px] font-bold text-sub shadow-card">
+              Отмена
+            </button>
+          </>
+        )}
       </div>
 
       {/* Поле ввода */}
