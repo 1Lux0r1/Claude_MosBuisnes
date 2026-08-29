@@ -966,6 +966,9 @@ export interface SearchHit { id: string; group: string; title: string; sub?: str
 export const SEARCH_INDEX: SearchHit[] = [
   ...QUICK_ACTIONS.map((a) => ({ id: `act-${a.id}`, group: "Действия", title: a.title, sub: a.desc })),
   ...SERVICE_SECTIONS.map((s) => ({ id: `sec-${s.id}`, group: "Услуги", title: s.title, sub: s.desc })),
+  /* Отдельная группа — иначе конкретные услуги («Субсидия на оборудование» и т.п.)
+     вообще не находились поиском, только 5 разделов-плиток каталога. */
+  ...SERVICE_CATALOG.map((s) => ({ id: `cat-${s.id}`, group: "Каталог услуг", title: s.title, sub: s.desc })),
   ...PARTNER_PAGES.flatMap((p) => p.items.map((x) => ({ id: `par-${x.id}`, group: "Партнёры", title: x.name, sub: x.badge }))),
   ...NEWS.map((n) => ({ id: `news-${n.id}`, group: "Новости", title: n.title, sub: n.date })),
 ];

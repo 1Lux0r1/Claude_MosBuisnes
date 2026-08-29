@@ -15,7 +15,7 @@ import { HomeSkeleton, Reveal, Sheet, ToastProvider, useToast } from "./ui";
 import { toggleFavorite, useFavorites } from "./data/favorites";
 import { Icon } from "./icons";
 import {
-  NEWS, NEWS_SECTION_META, NEWS_SORT_OPTIONS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_SECTIONS, sortNews,
+  NEWS, NEWS_SECTION_META, NEWS_SORT_OPTIONS, PARTNER_PAGES, QUICK_ACTIONS, SERVICE_CATALOG, SERVICE_SECTIONS, sortNews,
   type NewsItem, type NewsSection, type NewsSort, type Partner, type QuickAction, type SearchHit, type ServiceSection,
 } from "./data";
 
@@ -98,6 +98,12 @@ export default function App() {
       if (a) setSheet({ kind: "action", data: a });
     } else if (hit.group === "Услуги") {
       const s = SERVICE_SECTIONS.find((x) => x.id === id);
+      if (s) {
+        setServicesCategory(s.category);
+        go(1, "left");
+      }
+    } else if (hit.group === "Каталог услуг") {
+      const s = SERVICE_CATALOG.find((x) => x.id === id);
       if (s) {
         setServicesCategory(s.category);
         go(1, "left");
@@ -292,6 +298,7 @@ function Shell(props: {
                   setRegistered(next);
                 }}
                 onOpenVitrina={openVitrina}
+                onOpenIntegrations={() => onGoTab(3)}
               />
             )}
             {tab === 3 && (
@@ -309,7 +316,7 @@ function Shell(props: {
         profileBadge={profileRead ? 0 : 1}
       />
 
-      <AIAssistant open={aiOpen} onClose={() => setAiOpen(false)} />
+      <AIAssistant open={aiOpen} onClose={() => setAiOpen(false)} onOpenIntegrations={() => { setAiOpen(false); onGoTab(3); }} />
       <SettingsService open={settingsOpen} onClose={() => setSettingsOpen(false)} offline={offline} onOffline={setOffline} />
       <QuickActionsPicker
         open={quickActionsPickerOpen}
@@ -356,6 +363,15 @@ function HomeScreen({
   );
 }
 
+/* Склонение «новость» по числу — 1 новость, 2 новости, 5 новостей */
+function pluralNews(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "новость";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "новости";
+  return "новостей";
+}
+
 /* ---------- Шторки действий/партнёров/новостей ---------- */
 function ActionSheetView({
   sheet, onClose, onNavigate,
@@ -400,7 +416,7 @@ function ActionSheetView({
             </button>
             <div className="min-w-0 flex-1">
               <p className="font-display text-[15px] font-semibold tracking-tight">Все новости</p>
-              <p className="text-[11px] font-semibold text-sub">{filtered.length} новостей · {sortLabel}</p>
+              <p className="text-[11px] font-semibold text-sub">{filtered.length} {pluralNews(filtered.length)} · {sortLabel}</p>
             </div>
           </div>
           <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3">

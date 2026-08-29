@@ -94,7 +94,7 @@ export const requirementCounts = (): RequirementCounts => ({
    тоже здесь, чтобы вёрстка не держала контент. */
 export const REQUIREMENTS_HEADER = {
   title: "Обязательные требования",
-  profile: "ООО «Ромашка» · общепит · ул. Люблинская, вл. 3",
+  profile: "ООО «Вектор Групп» · общепит · ул. Люблинская, вл. 3",
   updated: "Обновлено 19 августа, по данным 4 ведомств",
 };
 

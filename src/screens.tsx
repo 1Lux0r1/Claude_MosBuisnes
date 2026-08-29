@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon, type IconName } from "./icons";
 import { EmptyState, ErrorState, Reveal, Sheet, useToast } from "./ui";
+import PaymentScreen from "./PaymentScreen";
 import {
   EXTRA_DIRECTIONS, SERVICE_AUDIENCES, SERVICE_CATALOG, addDays, eventsForDate, loadApplications,
   loadConnectedIntegrationIds, saveApplications, sectionTitleForCategory, serviceDirections, startOfToday,
@@ -354,31 +355,38 @@ const KIND_DOT: Record<EventKind, string> = { critical: "#f5333f", deadline: "#f
 type Notification = { id: string; icon: IconName; bg: string; fg: string; title: string; sub: string; onClick: () => void };
 
 export function EventsScreen({
-  registered, onRegister, onOpenVitrina,
+  registered, onRegister, onOpenVitrina, onOpenIntegrations,
 }: {
   registered: Set<string>;
   onRegister: (id: string) => void;
   onOpenVitrina: () => void;
+  onOpenIntegrations: () => void;
 }) {
   const toast = useToast();
   const [filter, setFilter] = useState<EventKind | "all">("all");
+  const connected1C = useMemo(() => loadConnectedIntegrationIds().includes("1c"), []);
+  const [payment, setPayment] = useState<{ event: DayEvent; date: Date } | null>(null);
 
   const items = useMemo(() => {
     const acc: { id: string; day: string; date: Date; ev: DayEvent }[] = [];
     const today = startOfToday();
     for (let i = 0; i < 7; i++) {
       const d = addDays(today, i);
-      eventsForDate(d).forEach((ev, j) =>
-        acc.push({
-          id: `${i}-${j}`,
-          day: i === 0 ? "Сегодня" : i === 1 ? "Завтра" : `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}`,
-          date: d,
-          ev,
-        }),
-      );
+      /* Коммерческие платежи партнёров требуют интеграции с 1С — без неё
+         скрываем их и здесь, как и в календаре (CalendarStrip). */
+      eventsForDate(d)
+        .filter((ev) => connected1C || ev.payment?.type !== "commercial")
+        .forEach((ev, j) =>
+          acc.push({
+            id: `${i}-${j}`,
+            day: i === 0 ? "Сегодня" : i === 1 ? "Завтра" : `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, "0")}`,
+            date: d,
+            ev,
+          }),
+        );
     }
     return acc;
-  }, []);
+  }, [connected1C]);
 
   const notifications: Notification[] = [
     {
@@ -467,12 +475,17 @@ export function EventsScreen({
             ))}
           {list.map((x, i) => {
             const done = registered.has(x.id);
+            const pay = x.ev.payment;
+            const Row = pay ? "button" : "div";
             return (
               <Reveal key={x.id} delay={i * 45}>
-                <div className="flex items-center gap-3 rounded-2xl border border-line/80 bg-card p-3.5 shadow-card transition-all hover:shadow-float">
+                <Row
+                  {...(pay ? { onClick: () => setPayment({ event: x.ev, date: x.date }) } : {})}
+                  className={`flex w-full items-center gap-3 rounded-2xl border border-line/80 bg-card p-3.5 text-left shadow-card transition-all hover:shadow-float ${pay ? "press" : ""}`}
+                >
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: `${KIND_DOT[x.ev.kind]}1a` }}>
                     <Icon
-                      name={x.ev.kind === "info" ? "calendar" : x.ev.kind === "deadline" ? "clock" : "alert"}
+                      name={pay ? "coins" : x.ev.kind === "info" ? "calendar" : x.ev.kind === "deadline" ? "clock" : "alert"}
                       className="h-[18px] w-[18px]"
                       strokeWidth={2}
                     />
@@ -481,9 +494,14 @@ export function EventsScreen({
                     <p className="text-[13px] font-extrabold leading-tight tracking-tight">{x.ev.title}</p>
                     <p className="mt-0.5 text-[11px] font-semibold text-sub">
                       <span style={{ color: KIND_DOT[x.ev.kind] }}>{x.ev.time}</span> · {x.day}
-                      {x.ev.place && <span> · {x.ev.place}</span>}
+                      {pay ? <span> · {fmtSupportAmount(pay.amount)}</span> : x.ev.place && <span> · {x.ev.place}</span>}
                     </p>
                   </div>
+                  {pay && (
+                    <span className="shrink-0 text-sub">
+                      <Icon name="chevron-right" className="h-4 w-4" strokeWidth={2.2} />
+                    </span>
+                  )}
                   {x.ev.kind === "info" && (
                     <button
                       onClick={() => {
@@ -497,12 +515,20 @@ export function EventsScreen({
                       {done ? "Вы записаны" : "Записаться"}
                     </button>
                   )}
-                </div>
+                </Row>
               </Reveal>
             );
           })}
         </div>
       )}
+
+      <PaymentScreen
+        open={!!payment}
+        event={payment?.event ?? null}
+        date={payment?.date ?? null}
+        onClose={() => setPayment(null)}
+        onOpenProfile={onOpenIntegrations}
+      />
     </div>
   );
 }

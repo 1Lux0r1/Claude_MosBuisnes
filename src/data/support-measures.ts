@@ -89,7 +89,7 @@ export const fmtSupportAmount = (v: number): string =>
 /* Статические тексты витрины (п.7) — чтобы вёрстка не держала контент. */
 export const VITRINA_HEADER = {
   eyebrow: "Вам доступно",
-  profile: "ООО «Ромашка» · МСП · общепит · 2 года на рынке",
+  profile: "ООО «Вектор Групп» · МСП · общепит · 2 года на рынке",
 };
 
 export const VITRINA_FOOTER = {
