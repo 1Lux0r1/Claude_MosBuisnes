@@ -128,12 +128,15 @@ type View =
 export default function ProfileService({
   openTo, onOpened,
 }: {
-  /** Если "vitrina" — открыть ЛК сразу на странице персональной витрины (тизер п.8 → п.7) */
+  /** Если "vitrina"/"apps"/"requirements" — открыть ЛК сразу на нужной странице
+   *  (тизер витрины с Главной, заявления и Радар требований из чата ИИ-агента) */
   openTo?: string | null;
   onOpened?: () => void;
 } = {}) {
   const toast = useToast();
-  const [view, setView] = useState<View>(() => (openTo === "vitrina" ? { t: "vitrina" } : { t: "root" }));
+  const [view, setView] = useState<View>(() =>
+    openTo === "vitrina" ? { t: "vitrina" } : openTo === "apps" ? { t: "apps" } : openTo === "requirements" ? { t: "requirements" } : { t: "root" },
+  );
 
   /* Тизер витрины с Главной открывает сразу её страницу; сбрасываем разовое
      намерение, чтобы обычный заход в ЛК показывал корневой экран. */

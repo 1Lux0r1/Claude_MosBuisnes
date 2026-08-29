@@ -204,6 +204,7 @@ function Shell(props: {
   const [quickActionIds, setQuickActionIds] = useState<string[]>(loadEnabledQuickActionIds);
   const [quickActionsPickerOpen, setQuickActionsPickerOpen] = useState(false);
   const [profileOpenTo, setProfileOpenTo] = useState<string | null>(null);
+  const [autoApply, setAutoApply] = useState<{ id: string; values: Record<string, string> } | null>(null);
   const eventsBadge = useMemo(() => Math.max(0, 3 - registered.size), [registered]);
 
   const handleLogout = () => {
@@ -212,10 +213,38 @@ function Shell(props: {
     onGoTab(0);
   };
 
-  /* Тизер витрины с Главной: открыть Личный кабинет сразу на странице витрины */
+  /* Тизер витрины с Главной: открыть Личный кабинет сразу на странице витрины.
+     setAiOpen(false) — на случай, если вызвано из чата ИИ-агента (кросс-продажа
+     по отчёту/мерам поддержки): иначе оверлей чата остаётся поверх личного
+     кабинета, и переход выглядит так, будто ничего не произошло. Для обычных
+     вызовов (с Главной, из «Событий») aiOpen и так уже false — безвредно. */
   const openVitrina = () => {
+    setAiOpen(false);
     setProfileOpenTo("vitrina");
     onGoTab(3);
+  };
+
+  /* Переходы из чата ИИ-агента: заявления и Радар требований — те же экраны
+     личного кабинета, что и обычная навигация, просто открытые не с корня. */
+  const openApplications = () => {
+    setAiOpen(false);
+    setProfileOpenTo("apps");
+    onGoTab(3);
+  };
+  const openRequirements = () => {
+    setAiOpen(false);
+    setProfileOpenTo("requirements");
+    onGoTab(3);
+  };
+
+  /* Оформление услуги из диалога с ИИ-агентом: ассистент собирает поля в чате,
+     а открывает и отправляет заявку каталог («Услуги») — та же форма ApplyForm,
+     что и при обычном оформлении, только уже заполненная. Пользователь видит
+     и может поправить данные перед отправкой, а не отправляет вслепую из чата. */
+  const openServiceApply = (id: string, values: Record<string, string>) => {
+    setAutoApply({ id, values });
+    setAiOpen(false);
+    onGoTab(1);
   };
 
   const toggleQuickAction = (id: string) => {
@@ -287,7 +316,14 @@ function Shell(props: {
                   onOpenVitrina={openVitrina}
                 />
               ))}
-            {tab === 1 && <ServicesScreen category={servicesCategory} onCategory={setServicesCategory} />}
+            {tab === 1 && (
+              <ServicesScreen
+                category={servicesCategory}
+                onCategory={setServicesCategory}
+                autoApply={autoApply}
+                onAutoApplyConsumed={() => setAutoApply(null)}
+              />
+            )}
             {tab === 2 && (
               <EventsScreen
                 registered={registered}
@@ -316,7 +352,15 @@ function Shell(props: {
         profileBadge={profileRead ? 0 : 1}
       />
 
-      <AIAssistant open={aiOpen} onClose={() => setAiOpen(false)} onOpenIntegrations={() => { setAiOpen(false); onGoTab(3); }} />
+      <AIAssistant
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        onOpenIntegrations={() => { setAiOpen(false); onGoTab(3); }}
+        onOpenApplications={openApplications}
+        onOpenRequirements={openRequirements}
+        onOpenVitrina={openVitrina}
+        onOpenServiceApply={openServiceApply}
+      />
       <SettingsService open={settingsOpen} onClose={() => setSettingsOpen(false)} offline={offline} onOffline={setOffline} />
       <QuickActionsPicker
         open={quickActionsPickerOpen}

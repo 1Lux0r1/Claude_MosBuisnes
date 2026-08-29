@@ -219,6 +219,12 @@ const paths: Record<string, JSX.Element> = {
       <circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none" />
     </>
   ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21m-3.5 0h7" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof paths;

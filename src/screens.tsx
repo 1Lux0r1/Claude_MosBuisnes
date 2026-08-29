@@ -9,12 +9,13 @@ import {
 } from "./data";
 import { fmtSupportAmount, supportAvailableTotal, supportMeasuresCount } from "./data/support-measures";
 
-type ServiceItem = (typeof SERVICE_CATALOG)[number];
+export type ServiceItem = (typeof SERVICE_CATALOG)[number];
 
-/* Поля формы заявки — свои под каждую категорию каталога */
-type FieldDef = { key: string; label: string; type: "text" | "number"; placeholder: string };
+/* Поля формы заявки — свои под каждую категорию каталога. Экспортируются —
+   переиспользуются диалогом ИИ-агента для оформления заявки прямо в чате. */
+export type FieldDef = { key: string; label: string; type: "text" | "number"; placeholder: string };
 
-const CATEGORY_FIELDS: Record<string, FieldDef[]> = {
+export const CATEGORY_FIELDS: Record<string, FieldDef[]> = {
   "Разрешения": [
     { key: "address", label: "Адрес объекта", type: "text", placeholder: "Например: ул. Тверская, 12" },
     { key: "purpose", label: "Вид деятельности / назначение", type: "text", placeholder: "Например: розничная торговля" },
@@ -46,7 +47,7 @@ const CATEGORY_FIELDS: Record<string, FieldDef[]> = {
 
 /* Демо-данные организации из 1С:Предприятие — те же, что показаны в
    карточке организации личного кабинета (Анна Петрова, ООО «Вектор Групп») */
-const ONE_C_FILL: Record<string, string> = {
+export const ONE_C_FILL: Record<string, string> = {
   inn: "7712345678",
   amount: "500000",
   purpose: "Закупка оборудования для производства",
@@ -58,7 +59,7 @@ const ONE_C_FILL: Record<string, string> = {
  *  дней», «2-4 часа» и т.п.) — берёт максимальное число, единица по наличию
  *  «час»/«дн»; для нераспознанных форматов («торги», «по расписанию») —
  *  дефолт 14 дней. */
-function parseDeadlineMs(term: string): number {
+export function parseDeadlineMs(term: string): number {
   const hourMatch = term.match(/(\d+)\D+час/);
   if (hourMatch) return Number(hourMatch[1]) * 3_600_000;
   const nums = [...term.matchAll(/\d+/g)].map((m) => Number(m[0]));
@@ -68,20 +69,24 @@ function parseDeadlineMs(term: string): number {
 
 /* ---------- Форма заявки на услугу — поля зависят от категории ---------- */
 function ApplyForm({
-  service, onClose, onSubmit, connected1C,
+  service, onClose, onSubmit, connected1C, initialValues,
 }: {
   service: ServiceItem | null;
   onClose: () => void;
   onSubmit: () => void;
   connected1C: boolean;
+  /** Значения, собранные заранее ИИ-агентом в чате — форма открывается уже
+   *  заполненной, пользователь может поправить перед отправкой. */
+  initialValues?: Record<string, string>;
 }) {
   const fields = service ? (CATEGORY_FIELDS[service.category] ?? []) : [];
   const [values, setValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    setValues({});
+    setValues(initialValues ?? {});
     setErrors(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [service?.id]);
 
   if (!service) return null;
@@ -209,14 +214,30 @@ export function ServiceFilter({
 
 /* ---------- Услуги: каталог ---------- */
 export function ServicesScreen({
-  category, onCategory,
+  category, onCategory, autoApply, onAutoApplyConsumed,
 }: {
   category: string;
   onCategory: (c: string) => void;
+  /** Услуга и уже собранные в чате ИИ-агента значения полей — форма
+   *  открывается сразу при заходе на экран, предзаполненной. */
+  autoApply?: { id: string; values: Record<string, string> } | null;
+  onAutoApplyConsumed?: () => void;
 }) {
   const toast = useToast();
   const [applying, setApplying] = useState<ServiceItem | null>(null);
+  const [applyInitialValues, setApplyInitialValues] = useState<Record<string, string> | undefined>(undefined);
   const connected1C = useMemo(() => loadConnectedIntegrationIds().includes("1c"), []);
+
+  useEffect(() => {
+    if (!autoApply) return;
+    const svc = SERVICE_CATALOG.find((s) => s.id === autoApply.id);
+    if (svc) {
+      setApplying(svc);
+      setApplyInitialValues(autoApply.values);
+    }
+    onAutoApplyConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* Три фильтра, работают пересечением, каждый сбрасывается отдельно. «Направление»
      использует общий с навигацией параметр category (значение «Все» — без фильтра). */
@@ -257,6 +278,7 @@ export function ServicesScreen({
     saveApplications([app, ...loadApplications()]);
     toast(instant ? `Готово: «${applying.title}»` : `Заявка отправлена: «${applying.title}»`, "check");
     setApplying(null);
+    setApplyInitialValues(undefined);
   };
 
   return (
@@ -342,7 +364,13 @@ export function ServicesScreen({
         ))}
       </div>
 
-      <ApplyForm service={applying} onClose={() => setApplying(null)} onSubmit={submitApplication} connected1C={connected1C} />
+      <ApplyForm
+        service={applying}
+        onClose={() => { setApplying(null); setApplyInitialValues(undefined); }}
+        onSubmit={submitApplication}
+        connected1C={connected1C}
+        initialValues={applyInitialValues}
+      />
     </div>
   );
 }
