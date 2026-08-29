@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "./icons";
 import { SEARCH_INDEX, type SearchHit } from "./data";
 
-const GROUP_ICON: Record<string, string> = { Действия: "spark", Услуги: "clipboard", "Партнёры": "star", Новости: "news" };
+const GROUP_ICON: Record<string, string> = {
+  Действия: "spark", Услуги: "clipboard", "Каталог услуг": "clipboard", "Партнёры": "star", Новости: "news",
+};
 
 function StatusBar({ offline }: { offline: boolean }) {
   const [time, setTime] = useState(() =>
@@ -83,9 +85,18 @@ export default function Header({
   /* При смене вкладки меню закрывается — иконка сама по себе никуда не ведёт */
   useEffect(() => setMenuOpen(false), [tab]);
 
-  const hits = query.trim()
-    ? SEARCH_INDEX.filter((h) => (h.title + " " + (h.sub ?? "")).toLowerCase().includes(query.trim().toLowerCase())).slice(0, 7)
-    : [];
+  /* Помимо точного совпадения — запасное сравнение по «отрезанному» последнему
+     символу запроса: русские падежные окончания («справка» vs «справку»)
+     иначе не совпадают при простом includes(). */
+  const hits = (() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const qStem = q.length > 3 ? q.slice(0, -1) : q;
+    return SEARCH_INDEX.filter((h) => {
+      const text = (h.title + " " + (h.sub ?? "")).toLowerCase();
+      return text.includes(q) || text.includes(qStem);
+    }).slice(0, 7);
+  })();
   const showOverlay = focused && (hits.length > 0 || query.trim().length > 0);
 
   const pick = (h: SearchHit) => {
