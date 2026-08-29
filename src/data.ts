@@ -183,6 +183,41 @@ export const eventsForMonth = (y: number, m: number): Map<string, DayEvent[]> =>
   return map;
 };
 
+/* Склонение слова после числительного — «через 1 день / 3 дня / 5 дней» и т.п. */
+export function pluralRu(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+  return many;
+}
+
+const whenLabel = (off: number): string => {
+  if (off === 0) return "сегодня";
+  if (off === 1) return "завтра";
+  if (off === 2) return "послезавтра";
+  return `через ${off} ${pluralRu(off, "день", "дня", "дней")}`;
+};
+
+export interface UpcomingDeadline { title: string; time: string; whenLabel: string }
+
+/** Ближайшие критичные/дедлайновые события (для проактивного напоминания ИИ-агента).
+ *  Коммерческие платежи партнёрам скрываются без подключённой интеграции с 1С —
+ *  как и везде в приложении (см. CalendarStrip). */
+export function upcomingDeadlines(maxDays: number, limit: number): UpcomingDeadline[] {
+  const has1C = loadConnectedIntegrationIds().includes("1c");
+  return EVENTS
+    .filter(({ off, ev }) => {
+      if (off < 0 || off > maxDays) return false;
+      if (ev.kind !== "critical" && ev.kind !== "deadline") return false;
+      if (ev.payment?.type === "commercial" && !has1C) return false;
+      return true;
+    })
+    .sort((a, b) => a.off - b.off)
+    .slice(0, limit)
+    .map(({ off, ev }) => ({ title: ev.title, time: ev.time, whenLabel: whenLabel(off) }));
+}
+
 /* ---------- Быстрые действия ---------- */
 export const QUICK_ACTIONS: QuickAction[] = [
   {
@@ -943,12 +978,13 @@ export function sortNews(list: NewsItem[], sort: NewsSort): NewsItem[] {
 }
 
 /* ---------- ИИ-агент ---------- */
-export const AI_CHIPS = ["Какие субсидии мне доступны?", "Срок оплаты патента", "Как получить справку?", "Подобрать помещение"];
+export const AI_CHIPS = ["Какие субсидии мне доступны?", "Что у меня по требованиям?", "Срок оплаты патента", "Как получить справку?", "Подобрать помещение"];
 
+/** Общие ответы ассистента, не завязанные на данные других разделов —
+ *  вопросы про субсидии/требования отвечаются реальными данными в
+ *  AIAssistant (см. data/ai-insights.ts) раньше, чем текст доходит сюда. */
 export function aiReply(text: string): string {
   const t = text.toLowerCase();
-  if (t.includes("субсид") || t.includes("грант"))
-    return "Вам доступны 2 меры: компенсация затрат на оборудование (до 10 млн ₽) и грант на экспорт. Заявка подаётся в разделе «Меры поддержки», решение — за 10 рабочих дней. Хотите, подготовлю черновик?";
   if (t.includes("патент"))
     return "Оплата патента — до завтра, 23:59 (красная отметка в календаре). Оплатить можно без визита в ФНС через плитку «Оплатить госпошлину». Квитанция придёт на почту.";
   if (t.includes("справк"))

@@ -270,6 +270,50 @@ export function useSnap(count: number) {
   };
 }
 
+/* ---------- Прокрутка мышью для рядов без снапа (чипы, фильтры) ----------
+   Та же логика перетаскивания, что и в useSnap, но без индекса/снапа —
+   для рядов, где элементы не выравниваются по одному, а просто скроллятся. */
+export function useDragScroll<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const drag = useRef<{ startX: number; scrollLeft: number; moved: boolean; pointerId: number } | null>(null);
+
+  const onPointerDown = (e: React.PointerEvent<T>) => {
+    if (e.pointerType !== "mouse") return;
+    const el = ref.current;
+    if (!el) return;
+    drag.current = { startX: e.clientX, scrollLeft: el.scrollLeft, moved: false, pointerId: e.pointerId };
+  };
+
+  const onPointerMove = (e: React.PointerEvent<T>) => {
+    const d = drag.current;
+    const el = ref.current;
+    if (!d || !el) return;
+    const dx = e.clientX - d.startX;
+    if (!d.moved && Math.abs(dx) > 4) {
+      d.moved = true;
+      el.setPointerCapture(d.pointerId);
+    }
+    if (d.moved) el.scrollLeft = d.scrollLeft - dx;
+  };
+
+  const endDrag = (e: React.PointerEvent<T>) => {
+    const d = drag.current;
+    const el = ref.current;
+    drag.current = null;
+    if (!d || !el) return;
+    if (el.hasPointerCapture(d.pointerId)) el.releasePointerCapture(d.pointerId);
+    if (!d.moved) return;
+    const suppressClick = (ev: MouseEvent) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+    };
+    el.addEventListener("click", suppressClick, { capture: true, once: true });
+    window.setTimeout(() => el.removeEventListener("click", suppressClick, { capture: true }), 0);
+  };
+
+  return { ref, onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag };
+}
+
 /* ---------- Скелетоны загрузки ---------- */
 export function HomeSkeleton() {
   return (
